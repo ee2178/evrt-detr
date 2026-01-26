@@ -7,6 +7,10 @@ import pycuda.autoinit  # initializes CUDA driver
 import time
 from evlearn.eval.eval   import load_model, load_eval_dset
 
+import argparse
+
+
+
 # ----------------------------
 # User config
 # ----------------------------
@@ -23,8 +27,11 @@ INT8_CALIBRATION_BATCHES = 10
 # ----------------------------
 print("Loading FP32 ResNet50...")
 
+#args, model = load_model(
+#    'models/gen1_backup/video_evrtdetr_presnet50', epoch = None, device = 'cuda',
+#)
 args, model = load_model(
-    'models/gen1_backup/video_evrtdetr_presnet50', epoch = None, device = 'cuda',
+    'models/gen1_lrd/gen1_r0.8_s2', epoch = None, device = 'cuda',
 )
 
 # model_fp32 = torchvision.models.resnet50(weights="IMAGENET1K_V1").eval()
@@ -112,15 +119,28 @@ def build_trt_engine(onnx_path, engine_path, precision="fp32"):
 # ----------------------------
 # Benchmark
 # ----------------------------
-def benchmark_trt_engine(engine, batch_size=1, input_shape=(3, 224, 224), n_runs=50, fp16_block=False):
+def benchmark_trt_engine(
+    engine,
+    batch_size=1,
+    input_shape=(20, 256, 320),
+    n_runs=50,
+):
     """
-    Benchmarks a TensorRT ICudaEngine for FP32, FP16, or FP16 block mode.
+    Benchmarks a TensorRT ICudaEngine.
     Returns average latency in milliseconds.
     """
 
-    # Identify input and output tensor names
+    # ----------------------------
+    # Create execution context
+    # ----------------------------
+    context = engine.create_execution_context()
+
+    # ----------------------------
+    # Identify input / output tensors
+    # ----------------------------
     input_names = []
     output_names = []
+
     for i in range(engine.num_io_tensors):
         name = engine.get_tensor_name(i)
         mode = engine.get_tensor_mode(name)
@@ -129,50 +149,69 @@ def benchmark_trt_engine(engine, batch_size=1, input_shape=(3, 224, 224), n_runs
         else:
             output_names.append(name)
 
+    assert len(input_names) == 1, "Expected exactly one input tensor"
+
     input_name = input_names[0]
-    output_name = output_names[0]
 
-    # Allocate device memory for inputs/outputs
+    # ----------------------------
+    # Set input shape (EXPLICIT BATCH — REQUIRED)
+    # ----------------------------
     input_shape_full = (batch_size, *input_shape)
+    context.set_input_shape(input_name, input_shape_full)
+
+    # ----------------------------
+    # Allocate input buffer
+    # ----------------------------
     input_dtype = trt.nptype(engine.get_tensor_dtype(input_name))
-    output_dtype = trt.nptype(engine.get_tensor_dtype(output_name))
+    input_nbytes = np.prod(input_shape_full) * np.dtype(input_dtype).itemsize
+    d_input = cuda.mem_alloc(int(input_nbytes))
 
-    input_size = int(np.prod(input_shape_full) * np.dtype(input_dtype).itemsize)
-    output_size = int(np.prod(tuple(engine.get_tensor_shape(output_name))) * np.dtype(output_dtype).itemsize)
+    # ----------------------------
+    # Allocate ALL output buffers
+    # ----------------------------
+    d_outputs = {}
 
-    d_input = cuda.mem_alloc(input_size)
-    d_output = cuda.mem_alloc(output_size)
+    for name in output_names:
+        out_shape = context.get_tensor_shape(name)
+        out_dtype = trt.nptype(engine.get_tensor_dtype(name))
+        out_nbytes = np.prod(out_shape) * np.dtype(out_dtype).itemsize
+        d_outputs[name] = cuda.mem_alloc(int(out_nbytes))
 
-    # Prepare dummy input
-    dummy_input = np.random.randn(*input_shape_full).astype(input_dtype)
+    # ----------------------------
+    # Bind tensor addresses
+    # ----------------------------
+    context.set_tensor_address(input_name, int(d_input))
+    for name, ptr in d_outputs.items():
+        context.set_tensor_address(name, int(ptr))
 
-    # Create stream
+    # ----------------------------
+    # Prepare input
+    # ----------------------------
+    h_input = np.random.randn(*input_shape_full).astype(input_dtype)
+
     stream = cuda.Stream()
 
-    # Create execution context
-    context = engine.create_execution_context()
-
-    # Bind device memory
-    context.set_tensor_address(input_name, int(d_input))
-    context.set_tensor_address(output_name, int(d_output))
-
+    # ----------------------------
     # Warm-up
+    # ----------------------------
     for _ in range(5):
-        cuda.memcpy_htod_async(d_input, dummy_input, stream)
+        cuda.memcpy_htod_async(d_input, h_input, stream)
         context.execute_async_v3(stream_handle=stream.handle)
         stream.synchronize()
 
+    # ----------------------------
     # Benchmark
+    # ----------------------------
     start = time.time()
     for _ in range(n_runs):
-        cuda.memcpy_htod_async(d_input, dummy_input, stream)
+        cuda.memcpy_htod_async(d_input, h_input, stream)
         context.execute_async_v3(stream_handle=stream.handle)
         stream.synchronize()
     end = time.time()
 
-    latency_ms = (end - start) / n_runs * 1000
+    latency_ms = (end - start) / n_runs * 1000.0
+    print(f"TensorRT latency: {latency_ms:.2f} ms (batch={batch_size})")
 
-    print(f"TensorRT engine latency: {latency_ms:.2f} ms per batch of {batch_size}")
     return latency_ms
 
 # ----------------------------
