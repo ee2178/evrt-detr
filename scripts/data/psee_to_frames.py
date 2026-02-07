@@ -246,7 +246,7 @@ def load_video_label(path_video):
     video    = PSEELoader(path_video)
     labels   = np.load(path_label)
     basename = os.path.basename(path_video).rstrip(SUFFIX_VIDEO)
-
+    
     return (video, labels, basename)
 
 def apply_psee_min_box_filter(labels, filter_name):
@@ -272,7 +272,7 @@ def apply_rvt_max_box_filter(labels, split, filter_name):
 def crop_to_fov(labels, filter_name):
     height = FRAME_SIZES[filter_name]['height']
     width  = FRAME_SIZES[filter_name]['width']
-
+    
     x0 = labels['x']
     y0 = labels['y']
 
@@ -429,7 +429,6 @@ def scatter_events_into_frame(frame, events):
             next_time = time_max
 
         mask_bin = (events['t'] >= curr_time) & (events['t'] < next_time)
-
         x_pos = events[mask_bin & mask_pos & valid]['x']
         y_pos = events[mask_bin & mask_pos & valid]['y']
 
@@ -485,7 +484,6 @@ def labels_to_dict(labels, image_index):
         'time'        : labels['t'],
         'psee_labels' : labels
     }
-
     return result
 
 def save_frame(root, event_hist, labels_dict, frame_time, frame_idx):
@@ -521,7 +519,6 @@ def process_single_frame(
 def process_video(path, outdir_root, video_index, split, frame_config):
     # pylint: disable=too-many-locals
     video, labels, basename = load_video_label(path)
-
     # NOTE: psee_adt is full of backward incompatibility.
     #       if reformat_boxes is not done -- evaluation will break later
     labels = reformat_boxes(labels)
@@ -566,7 +563,6 @@ def process_dataset_split(root, outdir_root, split, frame_config, workers):
         total = len(videos),
         dynamic_ncols = True
     )
-
     with multiprocessing.Pool(processes = workers) as pool:
         for _ in pool.imap_unordered(worker, enumerate(videos)):
             pbar.update()

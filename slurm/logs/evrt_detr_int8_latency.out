@@ -1,0 +1,530 @@
+输入形状: (20, 256, 320)
+
+============================================================
+步骤 1: 加载模型
+============================================================
+  backbone 参数量: 19,409,992
+  encoder 参数量: 11,950,848
+  decoder 参数量: 7,306,218
+  temp_enc 参数量: 14,358,528
+  ema_temp_enc 参数量: 14,358,528
+模型总参数量: 67,384,114
+
+============================================================
+步骤 2: 导出ONNX
+============================================================
+创建推理引擎...
+导出FP32 ONNX到 /scratch/ee2178/evrt_detr/model_fp32.onnx ...
+  输入: ['frame', 'is_new_frame', 'list(0)_list(0)_dict(cell)_memory', 'list(0)_list(0)_dict(hidden)_memory', 'list(1)_list(0)_dict(cell)_memory', 'list(1)_list(0)_dict(hidden)_memory', 'list(2)_list(0)_dict(cell)_memory', 'list(2)_list(0)_dict(hidden)_memory']
+  输出: ['logits', 'boxes', 'out_list(0)_list(0)_dict(cell)_memory', 'out_list(0)_list(0)_dict(hidden)_memory', 'out_list(1)_list(0)_dict(cell)_memory', 'out_list(1)_list(0)_dict(hidden)_memory', 'out_list(2)_list(0)_dict(cell)_memory', 'out_list(2)_list(0)_dict(hidden)_memory']
+FP32 ONNX导出完成
+
+============================================================
+步骤 3: 使用trtexec构建引擎并测试
+============================================================
+使用已存在的校准缓存: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+
+处理 FP32...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp32_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp32.engine
+FP32: 3.85 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp32.engine
+
+处理 FP16...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --fp16 --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp16_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp16.engine
+FP16: 2.07 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp16.engine
+
+处理 INT8...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --int8 --fp16 --calib=/scratch/ee2178/evrt_detr/model_int8_calib.cache --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_int8_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_int8.engine
+INT8: 1.82 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_int8.engine
+
+============================================================
+量化测试总结 (使用trtexec)
+============================================================
+模型: models/gen1_lrd/gen1_r0.5_s2
+输入形状: (20, 256, 320)
+Batch Size: 1
+CUDA Graph: 启用
+Profiling: 启用
+------------------------------------------------------------
+FP32: 3.85 ms per batch of 1
+FP16: 2.07 ms per batch of 1
+INT8: 1.82 ms per batch of 1
+============================================================
+
+相对FP32的加速比:
+FP16: 1.86x
+INT8: 2.12x
+[02/06/2026-23:20:49] [TRT] [I] [MemUsageChange] Init CUDA: CPU -2, GPU +0, now: CPU 1305, GPU 1357 (MiB)
+[02/06/2026-23:20:50] [TRT] [I] ----------------------------------------------------------------
+[02/06/2026-23:20:50] [TRT] [I] ONNX IR version:  0.0.8
+[02/06/2026-23:20:50] [TRT] [I] Opset version:    17
+[02/06/2026-23:20:50] [TRT] [I] Producer name:    pytorch
+[02/06/2026-23:20:50] [TRT] [I] Producer version: 2.5.1
+[02/06/2026-23:20:50] [TRT] [I] Domain:           
+[02/06/2026-23:20:50] [TRT] [I] Model version:    0
+[02/06/2026-23:20:50] [TRT] [I] Doc string:       
+[02/06/2026-23:20:50] [TRT] [I] ----------------------------------------------------------------
+[02/06/2026-23:20:52] [TRT] [I] [MemUsageChange] Init builder kernel library: CPU +269, GPU +2, now: CPU 1618, GPU 1439 (MiB)
+[02/06/2026-23:20:52] [TRT] [I] Perform graph optimization on calibration graph.
+[02/06/2026-23:20:52] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/06/2026-23:20:53] [TRT] [I] Compiler backend is used during engine build.
+[02/06/2026-23:21:08] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/06/2026-23:21:12] [TRT] [I] Total Host Persistent Memory: 1756080 bytes
+[02/06/2026-23:21:12] [TRT] [I] Total Device Persistent Memory: 71168 bytes
+[02/06/2026-23:21:12] [TRT] [I] Max Scratch Memory: 295936 bytes
+[02/06/2026-23:21:12] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 1495 steps to complete.
+[02/06/2026-23:21:13] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 502.315ms to assign 33 blocks to 1495 nodes requiring 34096128 bytes.
+[02/06/2026-23:21:13] [TRT] [I] Total Activation Memory: 34096128 bytes
+[02/06/2026-23:21:13] [TRT] [I] Total Weights Memory: 293515784 bytes
+[02/06/2026-23:21:13] [TRT] [I] Compiler backend is used during engine execution.
+[02/06/2026-23:21:13] [TRT] [I] Engine generation completed in 21.0299 seconds.
+[02/06/2026-23:21:13] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +2, GPU +32, now: CPU 2, GPU 312 (MiB)
+[02/06/2026-23:21:13] [TRT] [I] Starting Calibration.
+[02/06/2026-23:21:14] [TRT] [I]   Calibrated batch 0 in 0.159387 seconds.
+[02/06/2026-23:21:14] [TRT] [I]   Calibrated batch 1 in 0.136789 seconds.
+[02/06/2026-23:21:14] [TRT] [I]   Calibrated batch 2 in 0.132827 seconds.
+[02/06/2026-23:21:14] [TRT] [I]   Calibrated batch 3 in 0.132219 seconds.
+[02/06/2026-23:21:14] [TRT] [I]   Calibrated batch 4 in 0.131989 seconds.
+[02/06/2026-23:21:14] [TRT] [I]   Calibrated batch 5 in 0.132195 seconds.
+[02/06/2026-23:21:15] [TRT] [I]   Calibrated batch 6 in 0.131552 seconds.
+[02/06/2026-23:21:15] [TRT] [I]   Calibrated batch 7 in 0.132172 seconds.
+[02/06/2026-23:21:15] [TRT] [I]   Calibrated batch 8 in 0.131984 seconds.
+[02/06/2026-23:21:15] [TRT] [I]   Calibrated batch 9 in 0.131945 seconds.
+[02/06/2026-23:22:49] [TRT] [I]   Post Processing Calibration data in 93.8462 seconds.
+[02/06/2026-23:22:49] [TRT] [I] Calibration completed in 116.882 seconds.
+[02/06/2026-23:22:49] [TRT] [I] Writing Calibration Cache for calibrator: TRT-101501-EntropyCalibration2
+[02/06/2026-23:22:49] [TRT] [W] Missing scale and zero-point for tensor is_new_frame, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/06/2026-23:22:49] [TRT] [W] Missing scale and zero-point for tensor /Not_output_0, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/06/2026-23:22:49] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/06/2026-23:25:16] [TRT] [I] Compiler backend is used during engine build.
+[02/06/2026-23:27:38] [TRT] [I] [GraphReduction] The approximate region cut reduction algorithm is called.
+[02/06/2026-23:27:38] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/06/2026-23:27:42] [TRT] [I] Total Host Persistent Memory: 932416 bytes
+[02/06/2026-23:27:42] [TRT] [I] Total Device Persistent Memory: 246272 bytes
+[02/06/2026-23:27:42] [TRT] [I] Max Scratch Memory: 21160960 bytes
+[02/06/2026-23:27:42] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 227 steps to complete.
+[02/06/2026-23:27:42] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 17.6523ms to assign 21 blocks to 227 nodes requiring 32916480 bytes.
+[02/06/2026-23:27:42] [TRT] [I] Total Activation Memory: 32916480 bytes
+[02/06/2026-23:27:42] [TRT] [I] Total Weights Memory: 82057156 bytes
+[02/06/2026-23:27:42] [TRT] [I] Compiler backend is used during engine execution.
+[02/06/2026-23:27:42] [TRT] [I] Engine generation completed in 293.085 seconds.
+[02/06/2026-23:27:42] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 7 MiB, GPU 315 MiB
+输入形状: (20, 256, 320)
+
+============================================================
+步骤 1: 加载模型
+============================================================
+  backbone 参数量: 23,248,208
+  encoder 参数量: 11,950,848
+  decoder 参数量: 7,306,218
+  temp_enc 参数量: 14,358,528
+  ema_temp_enc 参数量: 14,358,528
+模型总参数量: 71,222,330
+
+============================================================
+步骤 2: 导出ONNX
+============================================================
+创建推理引擎...
+导出FP32 ONNX到 /scratch/ee2178/evrt_detr/model_fp32.onnx ...
+  输入: ['frame', 'is_new_frame', 'list(0)_list(0)_dict(cell)_memory', 'list(0)_list(0)_dict(hidden)_memory', 'list(1)_list(0)_dict(cell)_memory', 'list(1)_list(0)_dict(hidden)_memory', 'list(2)_list(0)_dict(cell)_memory', 'list(2)_list(0)_dict(hidden)_memory']
+  输出: ['logits', 'boxes', 'out_list(0)_list(0)_dict(cell)_memory', 'out_list(0)_list(0)_dict(hidden)_memory', 'out_list(1)_list(0)_dict(cell)_memory', 'out_list(1)_list(0)_dict(hidden)_memory', 'out_list(2)_list(0)_dict(cell)_memory', 'out_list(2)_list(0)_dict(hidden)_memory']
+FP32 ONNX导出完成
+
+============================================================
+步骤 3: 使用trtexec构建引擎并测试
+============================================================
+生成INT8校准缓存: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+使用增强的INT8校准流程（手动设置dynamic range）...
+开始INT8校准（将运行10批数据）...
+为所有网络tensor设置dynamic range...
+已为 4574 个tensor设置dynamic range
+INT8校准完成，cache已保存到: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+
+处理 FP32...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp32_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp32.engine
+FP32: 4.11 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp32.engine
+
+处理 FP16...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --fp16 --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp16_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp16.engine
+FP16: 2.12 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp16.engine
+
+处理 INT8...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --int8 --fp16 --calib=/scratch/ee2178/evrt_detr/model_int8_calib.cache --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_int8_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_int8.engine
+INT8: 1.85 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_int8.engine
+
+============================================================
+量化测试总结 (使用trtexec)
+============================================================
+模型: models/gen1_lrd/gen1_r0.6_s2
+输入形状: (20, 256, 320)
+Batch Size: 1
+CUDA Graph: 启用
+Profiling: 启用
+------------------------------------------------------------
+FP32: 4.11 ms per batch of 1
+FP16: 2.12 ms per batch of 1
+INT8: 1.85 ms per batch of 1
+============================================================
+
+相对FP32的加速比:
+FP16: 1.94x
+INT8: 2.22x
+[02/06/2026-23:40:45] [TRT] [I] [MemUsageChange] Init CUDA: CPU -2, GPU +0, now: CPU 1370, GPU 1379 (MiB)
+[02/06/2026-23:40:46] [TRT] [I] ----------------------------------------------------------------
+[02/06/2026-23:40:46] [TRT] [I] ONNX IR version:  0.0.8
+[02/06/2026-23:40:46] [TRT] [I] Opset version:    17
+[02/06/2026-23:40:46] [TRT] [I] Producer name:    pytorch
+[02/06/2026-23:40:46] [TRT] [I] Producer version: 2.5.1
+[02/06/2026-23:40:46] [TRT] [I] Domain:           
+[02/06/2026-23:40:46] [TRT] [I] Model version:    0
+[02/06/2026-23:40:46] [TRT] [I] Doc string:       
+[02/06/2026-23:40:46] [TRT] [I] ----------------------------------------------------------------
+[02/06/2026-23:40:46] [TRT] [I] [MemUsageChange] Init builder kernel library: CPU +268, GPU +2, now: CPU 1632, GPU 1461 (MiB)
+[02/06/2026-23:40:46] [TRT] [I] Perform graph optimization on calibration graph.
+[02/06/2026-23:40:46] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/06/2026-23:40:47] [TRT] [I] Compiler backend is used during engine build.
+[02/06/2026-23:41:01] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/06/2026-23:41:05] [TRT] [I] Total Host Persistent Memory: 1757296 bytes
+[02/06/2026-23:41:05] [TRT] [I] Total Device Persistent Memory: 79360 bytes
+[02/06/2026-23:41:05] [TRT] [I] Max Scratch Memory: 295936 bytes
+[02/06/2026-23:41:05] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 1495 steps to complete.
+[02/06/2026-23:41:06] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 508.742ms to assign 33 blocks to 1495 nodes requiring 35079168 bytes.
+[02/06/2026-23:41:06] [TRT] [I] Total Activation Memory: 35079168 bytes
+[02/06/2026-23:41:06] [TRT] [I] Total Weights Memory: 309028360 bytes
+[02/06/2026-23:41:06] [TRT] [I] Compiler backend is used during engine execution.
+[02/06/2026-23:41:06] [TRT] [I] Engine generation completed in 19.6222 seconds.
+[02/06/2026-23:41:06] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +2, GPU +33, now: CPU 2, GPU 328 (MiB)
+[02/06/2026-23:41:06] [TRT] [I] Starting Calibration.
+[02/06/2026-23:41:07] [TRT] [I]   Calibrated batch 0 in 0.148806 seconds.
+[02/06/2026-23:41:07] [TRT] [I]   Calibrated batch 1 in 0.133945 seconds.
+[02/06/2026-23:41:07] [TRT] [I]   Calibrated batch 2 in 0.132426 seconds.
+[02/06/2026-23:41:07] [TRT] [I]   Calibrated batch 3 in 0.131871 seconds.
+[02/06/2026-23:41:07] [TRT] [I]   Calibrated batch 4 in 0.132209 seconds.
+[02/06/2026-23:41:07] [TRT] [I]   Calibrated batch 5 in 0.132068 seconds.
+[02/06/2026-23:41:08] [TRT] [I]   Calibrated batch 6 in 0.131641 seconds.
+[02/06/2026-23:41:08] [TRT] [I]   Calibrated batch 7 in 0.131803 seconds.
+[02/06/2026-23:41:08] [TRT] [I]   Calibrated batch 8 in 0.131595 seconds.
+[02/06/2026-23:41:08] [TRT] [I]   Calibrated batch 9 in 0.132005 seconds.
+[02/06/2026-23:42:42] [TRT] [I]   Post Processing Calibration data in 93.7188 seconds.
+[02/06/2026-23:42:42] [TRT] [I] Calibration completed in 115.317 seconds.
+[02/06/2026-23:42:42] [TRT] [I] Writing Calibration Cache for calibrator: TRT-101501-EntropyCalibration2
+[02/06/2026-23:42:42] [TRT] [W] Missing scale and zero-point for tensor is_new_frame, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/06/2026-23:42:42] [TRT] [W] Missing scale and zero-point for tensor /Not_output_0, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/06/2026-23:42:42] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/06/2026-23:44:38] [TRT] [I] Compiler backend is used during engine build.
+[02/06/2026-23:46:57] [TRT] [I] [GraphReduction] The approximate region cut reduction algorithm is called.
+[02/06/2026-23:46:57] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/06/2026-23:47:02] [TRT] [I] Total Host Persistent Memory: 931840 bytes
+[02/06/2026-23:47:02] [TRT] [I] Total Device Persistent Memory: 246272 bytes
+[02/06/2026-23:47:02] [TRT] [I] Max Scratch Memory: 21160960 bytes
+[02/06/2026-23:47:02] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 223 steps to complete.
+[02/06/2026-23:47:02] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 17.1552ms to assign 21 blocks to 223 nodes requiring 32916480 bytes.
+[02/06/2026-23:47:02] [TRT] [I] Total Activation Memory: 32916480 bytes
+[02/06/2026-23:47:02] [TRT] [I] Total Weights Memory: 86109636 bytes
+[02/06/2026-23:47:02] [TRT] [I] Compiler backend is used during engine execution.
+[02/06/2026-23:47:02] [TRT] [I] Engine generation completed in 259.469 seconds.
+[02/06/2026-23:47:02] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 7 MiB, GPU 331 MiB
+输入形状: (20, 256, 320)
+
+============================================================
+步骤 1: 加载模型
+============================================================
+  backbone 参数量: 27,125,816
+  encoder 参数量: 11,950,848
+  decoder 参数量: 7,306,218
+  temp_enc 参数量: 14,358,528
+  ema_temp_enc 参数量: 14,358,528
+模型总参数量: 75,099,938
+
+============================================================
+步骤 2: 导出ONNX
+============================================================
+创建推理引擎...
+导出FP32 ONNX到 /scratch/ee2178/evrt_detr/model_fp32.onnx ...
+  输入: ['frame', 'is_new_frame', 'list(0)_list(0)_dict(cell)_memory', 'list(0)_list(0)_dict(hidden)_memory', 'list(1)_list(0)_dict(cell)_memory', 'list(1)_list(0)_dict(hidden)_memory', 'list(2)_list(0)_dict(cell)_memory', 'list(2)_list(0)_dict(hidden)_memory']
+  输出: ['logits', 'boxes', 'out_list(0)_list(0)_dict(cell)_memory', 'out_list(0)_list(0)_dict(hidden)_memory', 'out_list(1)_list(0)_dict(cell)_memory', 'out_list(1)_list(0)_dict(hidden)_memory', 'out_list(2)_list(0)_dict(cell)_memory', 'out_list(2)_list(0)_dict(hidden)_memory']
+FP32 ONNX导出完成
+
+============================================================
+步骤 3: 使用trtexec构建引擎并测试
+============================================================
+生成INT8校准缓存: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+使用增强的INT8校准流程（手动设置dynamic range）...
+开始INT8校准（将运行10批数据）...
+为所有网络tensor设置dynamic range...
+已为 4574 个tensor设置dynamic range
+INT8校准完成，cache已保存到: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+
+处理 FP32...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp32_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp32.engine
+FP32: 4.25 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp32.engine
+
+处理 FP16...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --fp16 --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp16_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp16.engine
+FP16: 2.17 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp16.engine
+
+处理 INT8...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --int8 --fp16 --calib=/scratch/ee2178/evrt_detr/model_int8_calib.cache --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_int8_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_int8.engine
+INT8: 1.88 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_int8.engine
+
+============================================================
+量化测试总结 (使用trtexec)
+============================================================
+模型: models/gen1_lrd/gen1_r0.7_s2
+输入形状: (20, 256, 320)
+Batch Size: 1
+CUDA Graph: 启用
+Profiling: 启用
+------------------------------------------------------------
+FP32: 4.25 ms per batch of 1
+FP16: 2.17 ms per batch of 1
+INT8: 1.88 ms per batch of 1
+============================================================
+
+相对FP32的加速比:
+FP16: 1.96x
+INT8: 2.26x
+[02/07/2026-00:00:18] [TRT] [I] [MemUsageChange] Init CUDA: CPU -2, GPU +0, now: CPU 1414, GPU 1403 (MiB)
+[02/07/2026-00:00:19] [TRT] [I] ----------------------------------------------------------------
+[02/07/2026-00:00:19] [TRT] [I] ONNX IR version:  0.0.8
+[02/07/2026-00:00:19] [TRT] [I] Opset version:    17
+[02/07/2026-00:00:19] [TRT] [I] Producer name:    pytorch
+[02/07/2026-00:00:19] [TRT] [I] Producer version: 2.5.1
+[02/07/2026-00:00:19] [TRT] [I] Domain:           
+[02/07/2026-00:00:19] [TRT] [I] Model version:    0
+[02/07/2026-00:00:19] [TRT] [I] Doc string:       
+[02/07/2026-00:00:19] [TRT] [I] ----------------------------------------------------------------
+[02/07/2026-00:00:19] [TRT] [I] [MemUsageChange] Init builder kernel library: CPU +268, GPU +2, now: CPU 1644, GPU 1485 (MiB)
+[02/07/2026-00:00:19] [TRT] [I] Perform graph optimization on calibration graph.
+[02/07/2026-00:00:19] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/07/2026-00:00:20] [TRT] [I] Compiler backend is used during engine build.
+[02/07/2026-00:00:36] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/07/2026-00:00:40] [TRT] [I] Total Host Persistent Memory: 1750192 bytes
+[02/07/2026-00:00:40] [TRT] [I] Total Device Persistent Memory: 79872 bytes
+[02/07/2026-00:00:40] [TRT] [I] Max Scratch Memory: 295936 bytes
+[02/07/2026-00:00:40] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 1495 steps to complete.
+[02/07/2026-00:00:41] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 503.623ms to assign 33 blocks to 1495 nodes requiring 36062208 bytes.
+[02/07/2026-00:00:41] [TRT] [I] Total Activation Memory: 36062208 bytes
+[02/07/2026-00:00:41] [TRT] [I] Total Weights Memory: 324473864 bytes
+[02/07/2026-00:00:41] [TRT] [I] Compiler backend is used during engine execution.
+[02/07/2026-00:00:41] [TRT] [I] Engine generation completed in 21.3253 seconds.
+[02/07/2026-00:00:41] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +2, GPU +34, now: CPU 2, GPU 344 (MiB)
+[02/07/2026-00:00:41] [TRT] [I] Starting Calibration.
+[02/07/2026-00:00:41] [TRT] [I]   Calibrated batch 0 in 0.150048 seconds.
+[02/07/2026-00:00:41] [TRT] [I]   Calibrated batch 1 in 0.134603 seconds.
+[02/07/2026-00:00:42] [TRT] [I]   Calibrated batch 2 in 0.133403 seconds.
+[02/07/2026-00:00:42] [TRT] [I]   Calibrated batch 3 in 0.132512 seconds.
+[02/07/2026-00:00:42] [TRT] [I]   Calibrated batch 4 in 0.132369 seconds.
+[02/07/2026-00:00:42] [TRT] [I]   Calibrated batch 5 in 0.132678 seconds.
+[02/07/2026-00:00:42] [TRT] [I]   Calibrated batch 6 in 0.132698 seconds.
+[02/07/2026-00:00:42] [TRT] [I]   Calibrated batch 7 in 0.132746 seconds.
+[02/07/2026-00:00:43] [TRT] [I]   Calibrated batch 8 in 0.133436 seconds.
+[02/07/2026-00:00:43] [TRT] [I]   Calibrated batch 9 in 0.133187 seconds.
+[02/07/2026-00:02:16] [TRT] [I]   Post Processing Calibration data in 93.0667 seconds.
+[02/07/2026-00:02:16] [TRT] [I] Calibration completed in 116.398 seconds.
+[02/07/2026-00:02:16] [TRT] [I] Writing Calibration Cache for calibrator: TRT-101501-EntropyCalibration2
+[02/07/2026-00:02:16] [TRT] [W] Missing scale and zero-point for tensor is_new_frame, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/07/2026-00:02:16] [TRT] [W] Missing scale and zero-point for tensor /Not_output_0, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/07/2026-00:02:16] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/07/2026-00:04:20] [TRT] [I] Compiler backend is used during engine build.
+[02/07/2026-00:06:22] [TRT] [I] [GraphReduction] The approximate region cut reduction algorithm is called.
+[02/07/2026-00:06:22] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/07/2026-00:06:26] [TRT] [I] Total Host Persistent Memory: 930880 bytes
+[02/07/2026-00:06:26] [TRT] [I] Total Device Persistent Memory: 246272 bytes
+[02/07/2026-00:06:26] [TRT] [I] Max Scratch Memory: 21160960 bytes
+[02/07/2026-00:06:26] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 238 steps to complete.
+[02/07/2026-00:06:26] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 21.3739ms to assign 27 blocks to 238 nodes requiring 32919552 bytes.
+[02/07/2026-00:06:26] [TRT] [I] Total Activation Memory: 32916480 bytes
+[02/07/2026-00:06:26] [TRT] [I] Total Weights Memory: 90051012 bytes
+[02/07/2026-00:06:26] [TRT] [I] Compiler backend is used during engine execution.
+[02/07/2026-00:06:26] [TRT] [I] Engine generation completed in 249.572 seconds.
+[02/07/2026-00:06:26] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 7 MiB, GPU 347 MiB
+输入形状: (20, 256, 320)
+
+============================================================
+步骤 1: 加载模型
+============================================================
+  backbone 参数量: 30,986,304
+  encoder 参数量: 11,950,848
+  decoder 参数量: 7,306,218
+  temp_enc 参数量: 14,358,528
+  ema_temp_enc 参数量: 14,358,528
+模型总参数量: 78,960,426
+
+============================================================
+步骤 2: 导出ONNX
+============================================================
+创建推理引擎...
+导出FP32 ONNX到 /scratch/ee2178/evrt_detr/model_fp32.onnx ...
+  输入: ['frame', 'is_new_frame', 'list(0)_list(0)_dict(cell)_memory', 'list(0)_list(0)_dict(hidden)_memory', 'list(1)_list(0)_dict(cell)_memory', 'list(1)_list(0)_dict(hidden)_memory', 'list(2)_list(0)_dict(cell)_memory', 'list(2)_list(0)_dict(hidden)_memory']
+  输出: ['logits', 'boxes', 'out_list(0)_list(0)_dict(cell)_memory', 'out_list(0)_list(0)_dict(hidden)_memory', 'out_list(1)_list(0)_dict(cell)_memory', 'out_list(1)_list(0)_dict(hidden)_memory', 'out_list(2)_list(0)_dict(cell)_memory', 'out_list(2)_list(0)_dict(hidden)_memory']
+FP32 ONNX导出完成
+
+============================================================
+步骤 3: 使用trtexec构建引擎并测试
+============================================================
+生成INT8校准缓存: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+使用增强的INT8校准流程（手动设置dynamic range）...
+开始INT8校准（将运行10批数据）...
+为所有网络tensor设置dynamic range...
+已为 4574 个tensor设置dynamic range
+INT8校准完成，cache已保存到: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+
+处理 FP32...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp32_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp32.engine
+FP32: 4.37 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp32.engine
+
+处理 FP16...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --fp16 --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp16_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp16.engine
+FP16: 2.18 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp16.engine
+
+处理 INT8...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --int8 --fp16 --calib=/scratch/ee2178/evrt_detr/model_int8_calib.cache --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_int8_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_int8.engine
+INT8: 1.90 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_int8.engine
+
+============================================================
+量化测试总结 (使用trtexec)
+============================================================
+模型: models/gen1_lrd/gen1_r0.8_s2
+输入形状: (20, 256, 320)
+Batch Size: 1
+CUDA Graph: 启用
+Profiling: 启用
+------------------------------------------------------------
+FP32: 4.37 ms per batch of 1
+FP16: 2.18 ms per batch of 1
+INT8: 1.90 ms per batch of 1
+============================================================
+
+相对FP32的加速比:
+FP16: 2.00x
+INT8: 2.30x
+[02/07/2026-00:19:55] [TRT] [I] [MemUsageChange] Init CUDA: CPU -2, GPU +0, now: CPU 1445, GPU 1427 (MiB)
+[02/07/2026-00:19:56] [TRT] [I] ----------------------------------------------------------------
+[02/07/2026-00:19:56] [TRT] [I] ONNX IR version:  0.0.8
+[02/07/2026-00:19:56] [TRT] [I] Opset version:    17
+[02/07/2026-00:19:56] [TRT] [I] Producer name:    pytorch
+[02/07/2026-00:19:56] [TRT] [I] Producer version: 2.5.1
+[02/07/2026-00:19:56] [TRT] [I] Domain:           
+[02/07/2026-00:19:56] [TRT] [I] Model version:    0
+[02/07/2026-00:19:56] [TRT] [I] Doc string:       
+[02/07/2026-00:19:56] [TRT] [I] ----------------------------------------------------------------
+[02/07/2026-00:19:56] [TRT] [I] [MemUsageChange] Init builder kernel library: CPU +268, GPU +2, now: CPU 1659, GPU 1509 (MiB)
+[02/07/2026-00:19:56] [TRT] [I] Perform graph optimization on calibration graph.
+[02/07/2026-00:19:57] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/07/2026-00:19:57] [TRT] [I] Compiler backend is used during engine build.
+[02/07/2026-00:20:11] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/07/2026-00:20:15] [TRT] [I] Total Host Persistent Memory: 1756784 bytes
+[02/07/2026-00:20:15] [TRT] [I] Total Device Persistent Memory: 88064 bytes
+[02/07/2026-00:20:15] [TRT] [I] Max Scratch Memory: 295936 bytes
+[02/07/2026-00:20:15] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 1495 steps to complete.
+[02/07/2026-00:20:16] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 501.328ms to assign 33 blocks to 1495 nodes requiring 37045248 bytes.
+[02/07/2026-00:20:16] [TRT] [I] Total Activation Memory: 37045248 bytes
+[02/07/2026-00:20:16] [TRT] [I] Total Weights Memory: 339985416 bytes
+[02/07/2026-00:20:16] [TRT] [I] Compiler backend is used during engine execution.
+[02/07/2026-00:20:16] [TRT] [I] Engine generation completed in 19.3342 seconds.
+[02/07/2026-00:20:16] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +2, GPU +35, now: CPU 2, GPU 360 (MiB)
+[02/07/2026-00:20:16] [TRT] [I] Starting Calibration.
+[02/07/2026-00:20:16] [TRT] [I]   Calibrated batch 0 in 0.149528 seconds.
+[02/07/2026-00:20:16] [TRT] [I]   Calibrated batch 1 in 0.135324 seconds.
+[02/07/2026-00:20:17] [TRT] [I]   Calibrated batch 2 in 0.133495 seconds.
+[02/07/2026-00:20:17] [TRT] [I]   Calibrated batch 3 in 0.132581 seconds.
+[02/07/2026-00:20:17] [TRT] [I]   Calibrated batch 4 in 0.133021 seconds.
+[02/07/2026-00:20:17] [TRT] [I]   Calibrated batch 5 in 0.132327 seconds.
+[02/07/2026-00:20:17] [TRT] [I]   Calibrated batch 6 in 0.132655 seconds.
+[02/07/2026-00:20:17] [TRT] [I]   Calibrated batch 7 in 0.132494 seconds.
+[02/07/2026-00:20:18] [TRT] [I]   Calibrated batch 8 in 0.132099 seconds.
+[02/07/2026-00:20:18] [TRT] [I]   Calibrated batch 9 in 0.132332 seconds.
+[02/07/2026-00:21:51] [TRT] [I]   Post Processing Calibration data in 93.5712 seconds.
+[02/07/2026-00:21:51] [TRT] [I] Calibration completed in 114.903 seconds.
+[02/07/2026-00:21:51] [TRT] [I] Writing Calibration Cache for calibrator: TRT-101501-EntropyCalibration2
+[02/07/2026-00:21:51] [TRT] [W] Missing scale and zero-point for tensor is_new_frame, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/07/2026-00:21:51] [TRT] [W] Missing scale and zero-point for tensor /Not_output_0, expect fall back to non-int8 implementation for any layer consuming or producing given tensor
+[02/07/2026-00:21:52] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/07/2026-00:23:57] [TRT] [I] Compiler backend is used during engine build.
+[02/07/2026-00:26:08] [TRT] [I] [GraphReduction] The approximate region cut reduction algorithm is called.
+[02/07/2026-00:26:08] [TRT] [I] Detected 8 inputs and 8 output network tensors.
+[02/07/2026-00:26:13] [TRT] [I] Total Host Persistent Memory: 929728 bytes
+[02/07/2026-00:26:13] [TRT] [I] Total Device Persistent Memory: 246272 bytes
+[02/07/2026-00:26:13] [TRT] [I] Max Scratch Memory: 21160960 bytes
+[02/07/2026-00:26:13] [TRT] [I] [BlockAssignment] Started assigning block shifts. This will take 234 steps to complete.
+[02/07/2026-00:26:13] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 17.6889ms to assign 21 blocks to 234 nodes requiring 32916480 bytes.
+[02/07/2026-00:26:13] [TRT] [I] Total Activation Memory: 32916480 bytes
+[02/07/2026-00:26:13] [TRT] [I] Total Weights Memory: 94071236 bytes
+[02/07/2026-00:26:13] [TRT] [I] Compiler backend is used during engine execution.
+[02/07/2026-00:26:13] [TRT] [I] Engine generation completed in 260.778 seconds.
+[02/07/2026-00:26:13] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 8 MiB, GPU 363 MiB
+输入形状: (20, 256, 320)
+
+============================================================
+步骤 1: 加载模型
+============================================================
+  backbone 参数量: 34,863,912
+  encoder 参数量: 11,950,848
+  decoder 参数量: 7,306,218
+  temp_enc 参数量: 14,358,528
+  ema_temp_enc 参数量: 14,358,528
+模型总参数量: 82,838,034
+
+============================================================
+步骤 2: 导出ONNX
+============================================================
+创建推理引擎...
+导出FP32 ONNX到 /scratch/ee2178/evrt_detr/model_fp32.onnx ...
+  输入: ['frame', 'is_new_frame', 'list(0)_list(0)_dict(cell)_memory', 'list(0)_list(0)_dict(hidden)_memory', 'list(1)_list(0)_dict(cell)_memory', 'list(1)_list(0)_dict(hidden)_memory', 'list(2)_list(0)_dict(cell)_memory', 'list(2)_list(0)_dict(hidden)_memory']
+  输出: ['logits', 'boxes', 'out_list(0)_list(0)_dict(cell)_memory', 'out_list(0)_list(0)_dict(hidden)_memory', 'out_list(1)_list(0)_dict(cell)_memory', 'out_list(1)_list(0)_dict(hidden)_memory', 'out_list(2)_list(0)_dict(cell)_memory', 'out_list(2)_list(0)_dict(hidden)_memory']
+FP32 ONNX导出完成
+
+============================================================
+步骤 3: 使用trtexec构建引擎并测试
+============================================================
+生成INT8校准缓存: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+使用增强的INT8校准流程（手动设置dynamic range）...
+开始INT8校准（将运行10批数据）...
+为所有网络tensor设置dynamic range...
+已为 4574 个tensor设置dynamic range
+INT8校准完成，cache已保存到: /scratch/ee2178/evrt_detr/model_int8_calib.cache
+
+处理 FP32...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp32_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp32.engine
+FP32: 4.49 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp32.engine
+
+处理 FP16...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --fp16 --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_fp16_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_fp16.engine
+FP16: 2.23 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_fp16.engine
+
+处理 INT8...
+运行命令: /share/apps/apptainer/bin/singularity exec --nv docker://nvcr.io/nvidia/tensorrt:24.12-py3 /opt/tensorrt/bin/trtexec --onnx=/scratch/ee2178/evrt_detr/model_fp32.onnx --int8 --fp16 --calib=/scratch/ee2178/evrt_detr/model_int8_calib.cache --warmUp=200 --duration=3 --useCudaGraph --dumpProfile --separateProfileRun --profilingVerbosity=detailed --exportProfile=/scratch/ee2178/evrt_detr/model_int8_profile.json --saveEngine=/scratch/ee2178/evrt_detr/model_int8.engine
+INT8: 1.94 ms per batch of 1
+已删除engine文件: /scratch/ee2178/evrt_detr/model_int8.engine
+
+============================================================
+量化测试总结 (使用trtexec)
+============================================================
+模型: models/gen1_lrd/gen1_r0.9_s2
+输入形状: (20, 256, 320)
+Batch Size: 1
+CUDA Graph: 启用
+Profiling: 启用
+------------------------------------------------------------
+FP32: 4.49 ms per batch of 1
+FP16: 2.23 ms per batch of 1
+INT8: 1.94 ms per batch of 1
+============================================================
+
+相对FP32的加速比:
+FP16: 2.01x
+INT8: 2.31x

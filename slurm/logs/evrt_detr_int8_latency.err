@@ -1,0 +1,3751 @@
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/eval/eval.py:34: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  sd = torch.load(ckpt_path, map_location="cpu")
+INFO:evlearn.eval:Detected LRD backbone — enabling LRD in config
+INFO:evlearn.eval:Starting evaluation: 
+INFO:evlearn.eval:{
+    "data": {
+        "train": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 1,
+                    "shuffle_clips": true,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        },
+        "eval": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "frame": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "drop_last": false,
+                    "name": "video-element",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": "default-with-labels",
+                "shapes": [
+                    [
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": null,
+                "transform_frame": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": false,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        }
+    },
+    "nets": {
+        "backbone": {
+            "model": {
+                "act": "relu",
+                "depth": 50,
+                "freeze_at": -1,
+                "freeze_norm": false,
+                "lrd": {
+                    "enabled": true,
+                    "ratio": 0.5,
+                    "ratio_mode": "rank",
+                    "scheme": 2
+                },
+                "name": "presnet-rtdetr",
+                "num_stages": 4,
+                "pretrained": false,
+                "return_idx": [
+                    1,
+                    2,
+                    3
+                ],
+                "variant": "d"
+            }
+        },
+        "decoder": {
+            "model": {
+                "activation": "relu",
+                "aux_loss": true,
+                "box_noise_scale": 1.0,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "eps": 0.01,
+                "eval_idx": -1,
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "feat_channels": [
+                    256,
+                    256,
+                    256
+                ],
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "label_noise_ratio": 0.5,
+                "learnt_init_query": false,
+                "nhead": 8,
+                "num_classes": 2,
+                "num_decoder_layers": 6,
+                "num_decoder_points": 4,
+                "num_denoising": 100,
+                "num_levels": 3,
+                "num_queries": 300,
+                "position_embed_type": "sine"
+            }
+        },
+        "encoder": {
+            "model": {
+                "act": "silu",
+                "depth_mult": 1,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "enc_act": "gelu",
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "expansion": 1.0,
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "in_channels": [
+                    512,
+                    1024,
+                    2048
+                ],
+                "nhead": 8,
+                "num_encoder_layers": 1,
+                "pe_temperature": 10000,
+                "use_encoder_idx": [
+                    2
+                ]
+            }
+        },
+        "temp_enc": {
+            "model": {
+                "fpn_shapes": [
+                    [
+                        256,
+                        32,
+                        40
+                    ],
+                    [
+                        256,
+                        16,
+                        20
+                    ],
+                    [
+                        256,
+                        8,
+                        10
+                    ]
+                ],
+                "hidden_features_list": [
+                    256,
+                    256,
+                    256
+                ],
+                "kernel_size_list": [
+                    3,
+                    3,
+                    3
+                ],
+                "n_layers_list": [
+                    1,
+                    1,
+                    1
+                ],
+                "name": "conv-lstm",
+                "rezero": false
+            }
+        }
+    },
+    "epochs": 200,
+    "model": {
+        "batch_first": false,
+        "clip_wsched": {
+            "name": "constant",
+            "value": 1
+        },
+        "ema_momentum": 0,
+        "evaluator": {
+            "camera": "gen1",
+            "classes": [
+                "car",
+                "pedestrian"
+            ],
+            "downsampling_factor": null,
+            "image_size": [
+                256,
+                320
+            ],
+            "labels_name": "psee_labels",
+            "name": "psee"
+        },
+        "frame_shape": [
+            20,
+            256,
+            320
+        ],
+        "grad_clip": {
+            "value": 5.0
+        },
+        "name": "vcf-detection-evrtdetr",
+        "rtdetr_postproc_kwargs": {
+            "num_classes": 2,
+            "num_top_queries": 300,
+            "remap_mscoco_category": false,
+            "use_focal_loss": true
+        },
+        "use_denoising": true,
+        "video_wsched": {
+            "name": "constant",
+            "value": 0.5
+        }
+    },
+    "losses": {
+        "criterion": {
+            "alpha": 0.75,
+            "eos_coef": 0.0001,
+            "gamma": 2.0,
+            "losses": [
+                "vfl",
+                "boxes"
+            ],
+            "num_classes": 2,
+            "weight_dict": {
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_vfl": 1
+            }
+        },
+        "matcher": {
+            "alpha": 0.25,
+            "gamma": 2.0,
+            "use_focal_loss": true,
+            "weight_dict": {
+                "cost_bbox": 5,
+                "cost_class": 2,
+                "cost_giou": 2
+            }
+        }
+    },
+    "optimizers": {
+        "main": {
+            "lr": 0.0002,
+            "name": "AdamW",
+            "weight_decay": 0
+        }
+    },
+    "schedulers": {
+        "main": {
+            "anneal_strategy": "linear",
+            "div_factor": 20,
+            "final_div_factor": 500.0,
+            "max_lr": 0.0002,
+            "name": "one-cycle",
+            "pct_start": 0.005,
+            "total_steps": 200000
+        }
+    },
+    "seed": 0,
+    "val_interval": 10,
+    "steps_per_train_epoch": 1000,
+    "steps_per_val_epoch": 1000,
+    "transfer": {
+        "base_model": "models/gen1/rtdetr_presnet50",
+        "transfer_map": {
+            "backbone": "ema_backbone",
+            "decoder": "ema_decoder",
+            "encoder": "ema_encoder"
+        },
+        "strict": true,
+        "load_train_state": false,
+        "use_last_checkpoint": false,
+        "fuzzy": null
+    }
+}
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/leanbase/torch/checkpoint.py:66: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  v.load_state_dict(torch.load(load_path, map_location = device))
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:150: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if reference_points.shape[-1] == 2:
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:158: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  elif reference_points.shape[-1] == 4:
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/eval/eval.py:34: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  sd = torch.load(ckpt_path, map_location="cpu")
+INFO:evlearn.eval:Detected LRD backbone — enabling LRD in config
+INFO:evlearn.eval:Starting evaluation: 
+INFO:evlearn.eval:{
+    "data": {
+        "train": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 1,
+                    "shuffle_clips": true,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        },
+        "eval": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "frame": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "drop_last": false,
+                    "name": "video-element",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": "default-with-labels",
+                "shapes": [
+                    [
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": null,
+                "transform_frame": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": false,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        }
+    },
+    "nets": {
+        "backbone": {
+            "model": {
+                "act": "relu",
+                "depth": 50,
+                "freeze_at": -1,
+                "freeze_norm": false,
+                "lrd": {
+                    "enabled": true,
+                    "ratio": 0.6,
+                    "ratio_mode": "rank",
+                    "scheme": 2
+                },
+                "name": "presnet-rtdetr",
+                "num_stages": 4,
+                "pretrained": false,
+                "return_idx": [
+                    1,
+                    2,
+                    3
+                ],
+                "variant": "d"
+            }
+        },
+        "decoder": {
+            "model": {
+                "activation": "relu",
+                "aux_loss": true,
+                "box_noise_scale": 1.0,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "eps": 0.01,
+                "eval_idx": -1,
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "feat_channels": [
+                    256,
+                    256,
+                    256
+                ],
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "label_noise_ratio": 0.5,
+                "learnt_init_query": false,
+                "nhead": 8,
+                "num_classes": 2,
+                "num_decoder_layers": 6,
+                "num_decoder_points": 4,
+                "num_denoising": 100,
+                "num_levels": 3,
+                "num_queries": 300,
+                "position_embed_type": "sine"
+            }
+        },
+        "encoder": {
+            "model": {
+                "act": "silu",
+                "depth_mult": 1,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "enc_act": "gelu",
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "expansion": 1.0,
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "in_channels": [
+                    512,
+                    1024,
+                    2048
+                ],
+                "nhead": 8,
+                "num_encoder_layers": 1,
+                "pe_temperature": 10000,
+                "use_encoder_idx": [
+                    2
+                ]
+            }
+        },
+        "temp_enc": {
+            "model": {
+                "fpn_shapes": [
+                    [
+                        256,
+                        32,
+                        40
+                    ],
+                    [
+                        256,
+                        16,
+                        20
+                    ],
+                    [
+                        256,
+                        8,
+                        10
+                    ]
+                ],
+                "hidden_features_list": [
+                    256,
+                    256,
+                    256
+                ],
+                "kernel_size_list": [
+                    3,
+                    3,
+                    3
+                ],
+                "n_layers_list": [
+                    1,
+                    1,
+                    1
+                ],
+                "name": "conv-lstm",
+                "rezero": false
+            }
+        }
+    },
+    "epochs": 200,
+    "model": {
+        "batch_first": false,
+        "clip_wsched": {
+            "name": "constant",
+            "value": 1
+        },
+        "ema_momentum": 0,
+        "evaluator": {
+            "camera": "gen1",
+            "classes": [
+                "car",
+                "pedestrian"
+            ],
+            "downsampling_factor": null,
+            "image_size": [
+                256,
+                320
+            ],
+            "labels_name": "psee_labels",
+            "name": "psee"
+        },
+        "frame_shape": [
+            20,
+            256,
+            320
+        ],
+        "grad_clip": {
+            "value": 5.0
+        },
+        "name": "vcf-detection-evrtdetr",
+        "rtdetr_postproc_kwargs": {
+            "num_classes": 2,
+            "num_top_queries": 300,
+            "remap_mscoco_category": false,
+            "use_focal_loss": true
+        },
+        "use_denoising": true,
+        "video_wsched": {
+            "name": "constant",
+            "value": 0.5
+        }
+    },
+    "losses": {
+        "criterion": {
+            "alpha": 0.75,
+            "eos_coef": 0.0001,
+            "gamma": 2.0,
+            "losses": [
+                "vfl",
+                "boxes"
+            ],
+            "num_classes": 2,
+            "weight_dict": {
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_vfl": 1
+            }
+        },
+        "matcher": {
+            "alpha": 0.25,
+            "gamma": 2.0,
+            "use_focal_loss": true,
+            "weight_dict": {
+                "cost_bbox": 5,
+                "cost_class": 2,
+                "cost_giou": 2
+            }
+        }
+    },
+    "optimizers": {
+        "main": {
+            "lr": 0.0002,
+            "name": "AdamW",
+            "weight_decay": 0
+        }
+    },
+    "schedulers": {
+        "main": {
+            "anneal_strategy": "linear",
+            "div_factor": 20,
+            "final_div_factor": 500.0,
+            "max_lr": 0.0002,
+            "name": "one-cycle",
+            "pct_start": 0.005,
+            "total_steps": 200000
+        }
+    },
+    "seed": 0,
+    "val_interval": 10,
+    "steps_per_train_epoch": 1000,
+    "steps_per_val_epoch": 1000,
+    "transfer": {
+        "base_model": "models/gen1/rtdetr_presnet50",
+        "transfer_map": {
+            "backbone": "ema_backbone",
+            "decoder": "ema_decoder",
+            "encoder": "ema_encoder"
+        },
+        "strict": true,
+        "load_train_state": false,
+        "use_last_checkpoint": false,
+        "fuzzy": null
+    }
+}
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/leanbase/torch/checkpoint.py:66: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  v.load_state_dict(torch.load(load_path, map_location = device))
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:150: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if reference_points.shape[-1] == 2:
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:158: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  elif reference_points.shape[-1] == 4:
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:275: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  config.int8_calibrator = calibrator
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:322: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-10.0, 10.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:319: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-1.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:313: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-20.0, 20.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:316: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 2.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:310: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:307: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/eval/eval.py:34: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  sd = torch.load(ckpt_path, map_location="cpu")
+INFO:evlearn.eval:Detected LRD backbone — enabling LRD in config
+INFO:evlearn.eval:Starting evaluation: 
+INFO:evlearn.eval:{
+    "data": {
+        "train": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 1,
+                    "shuffle_clips": true,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        },
+        "eval": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "frame": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "drop_last": false,
+                    "name": "video-element",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": "default-with-labels",
+                "shapes": [
+                    [
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": null,
+                "transform_frame": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": false,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        }
+    },
+    "nets": {
+        "backbone": {
+            "model": {
+                "act": "relu",
+                "depth": 50,
+                "freeze_at": -1,
+                "freeze_norm": false,
+                "lrd": {
+                    "enabled": true,
+                    "ratio": 0.7,
+                    "ratio_mode": "rank",
+                    "scheme": 2
+                },
+                "name": "presnet-rtdetr",
+                "num_stages": 4,
+                "pretrained": false,
+                "return_idx": [
+                    1,
+                    2,
+                    3
+                ],
+                "variant": "d"
+            }
+        },
+        "decoder": {
+            "model": {
+                "activation": "relu",
+                "aux_loss": true,
+                "box_noise_scale": 1.0,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "eps": 0.01,
+                "eval_idx": -1,
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "feat_channels": [
+                    256,
+                    256,
+                    256
+                ],
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "label_noise_ratio": 0.5,
+                "learnt_init_query": false,
+                "nhead": 8,
+                "num_classes": 2,
+                "num_decoder_layers": 6,
+                "num_decoder_points": 4,
+                "num_denoising": 100,
+                "num_levels": 3,
+                "num_queries": 300,
+                "position_embed_type": "sine"
+            }
+        },
+        "encoder": {
+            "model": {
+                "act": "silu",
+                "depth_mult": 1,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "enc_act": "gelu",
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "expansion": 1.0,
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "in_channels": [
+                    512,
+                    1024,
+                    2048
+                ],
+                "nhead": 8,
+                "num_encoder_layers": 1,
+                "pe_temperature": 10000,
+                "use_encoder_idx": [
+                    2
+                ]
+            }
+        },
+        "temp_enc": {
+            "model": {
+                "fpn_shapes": [
+                    [
+                        256,
+                        32,
+                        40
+                    ],
+                    [
+                        256,
+                        16,
+                        20
+                    ],
+                    [
+                        256,
+                        8,
+                        10
+                    ]
+                ],
+                "hidden_features_list": [
+                    256,
+                    256,
+                    256
+                ],
+                "kernel_size_list": [
+                    3,
+                    3,
+                    3
+                ],
+                "n_layers_list": [
+                    1,
+                    1,
+                    1
+                ],
+                "name": "conv-lstm",
+                "rezero": false
+            }
+        }
+    },
+    "epochs": 200,
+    "model": {
+        "batch_first": false,
+        "clip_wsched": {
+            "name": "constant",
+            "value": 1
+        },
+        "ema_momentum": 0,
+        "evaluator": {
+            "camera": "gen1",
+            "classes": [
+                "car",
+                "pedestrian"
+            ],
+            "downsampling_factor": null,
+            "image_size": [
+                256,
+                320
+            ],
+            "labels_name": "psee_labels",
+            "name": "psee"
+        },
+        "frame_shape": [
+            20,
+            256,
+            320
+        ],
+        "grad_clip": {
+            "value": 5.0
+        },
+        "name": "vcf-detection-evrtdetr",
+        "rtdetr_postproc_kwargs": {
+            "num_classes": 2,
+            "num_top_queries": 300,
+            "remap_mscoco_category": false,
+            "use_focal_loss": true
+        },
+        "use_denoising": true,
+        "video_wsched": {
+            "name": "constant",
+            "value": 0.5
+        }
+    },
+    "losses": {
+        "criterion": {
+            "alpha": 0.75,
+            "eos_coef": 0.0001,
+            "gamma": 2.0,
+            "losses": [
+                "vfl",
+                "boxes"
+            ],
+            "num_classes": 2,
+            "weight_dict": {
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_vfl": 1
+            }
+        },
+        "matcher": {
+            "alpha": 0.25,
+            "gamma": 2.0,
+            "use_focal_loss": true,
+            "weight_dict": {
+                "cost_bbox": 5,
+                "cost_class": 2,
+                "cost_giou": 2
+            }
+        }
+    },
+    "optimizers": {
+        "main": {
+            "lr": 0.0002,
+            "name": "AdamW",
+            "weight_decay": 0
+        }
+    },
+    "schedulers": {
+        "main": {
+            "anneal_strategy": "linear",
+            "div_factor": 20,
+            "final_div_factor": 500.0,
+            "max_lr": 0.0002,
+            "name": "one-cycle",
+            "pct_start": 0.005,
+            "total_steps": 200000
+        }
+    },
+    "seed": 0,
+    "val_interval": 10,
+    "steps_per_train_epoch": 1000,
+    "steps_per_val_epoch": 1000,
+    "transfer": {
+        "base_model": "models/gen1/rtdetr_presnet50",
+        "transfer_map": {
+            "backbone": "ema_backbone",
+            "decoder": "ema_decoder",
+            "encoder": "ema_encoder"
+        },
+        "strict": true,
+        "load_train_state": false,
+        "use_last_checkpoint": false,
+        "fuzzy": null
+    }
+}
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/leanbase/torch/checkpoint.py:66: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  v.load_state_dict(torch.load(load_path, map_location = device))
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:150: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if reference_points.shape[-1] == 2:
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:158: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  elif reference_points.shape[-1] == 4:
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:275: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  config.int8_calibrator = calibrator
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:322: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-10.0, 10.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:319: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-1.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:316: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 2.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:310: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:307: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:313: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-20.0, 20.0)
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/eval/eval.py:34: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  sd = torch.load(ckpt_path, map_location="cpu")
+INFO:evlearn.eval:Detected LRD backbone — enabling LRD in config
+INFO:evlearn.eval:Starting evaluation: 
+INFO:evlearn.eval:{
+    "data": {
+        "train": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 1,
+                    "shuffle_clips": true,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        },
+        "eval": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "frame": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "drop_last": false,
+                    "name": "video-element",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": "default-with-labels",
+                "shapes": [
+                    [
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": null,
+                "transform_frame": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": false,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        }
+    },
+    "nets": {
+        "backbone": {
+            "model": {
+                "act": "relu",
+                "depth": 50,
+                "freeze_at": -1,
+                "freeze_norm": false,
+                "lrd": {
+                    "enabled": true,
+                    "ratio": 0.8,
+                    "ratio_mode": "rank",
+                    "scheme": 2
+                },
+                "name": "presnet-rtdetr",
+                "num_stages": 4,
+                "pretrained": false,
+                "return_idx": [
+                    1,
+                    2,
+                    3
+                ],
+                "variant": "d"
+            }
+        },
+        "decoder": {
+            "model": {
+                "activation": "relu",
+                "aux_loss": true,
+                "box_noise_scale": 1.0,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "eps": 0.01,
+                "eval_idx": -1,
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "feat_channels": [
+                    256,
+                    256,
+                    256
+                ],
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "label_noise_ratio": 0.5,
+                "learnt_init_query": false,
+                "nhead": 8,
+                "num_classes": 2,
+                "num_decoder_layers": 6,
+                "num_decoder_points": 4,
+                "num_denoising": 100,
+                "num_levels": 3,
+                "num_queries": 300,
+                "position_embed_type": "sine"
+            }
+        },
+        "encoder": {
+            "model": {
+                "act": "silu",
+                "depth_mult": 1,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "enc_act": "gelu",
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "expansion": 1.0,
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "in_channels": [
+                    512,
+                    1024,
+                    2048
+                ],
+                "nhead": 8,
+                "num_encoder_layers": 1,
+                "pe_temperature": 10000,
+                "use_encoder_idx": [
+                    2
+                ]
+            }
+        },
+        "temp_enc": {
+            "model": {
+                "fpn_shapes": [
+                    [
+                        256,
+                        32,
+                        40
+                    ],
+                    [
+                        256,
+                        16,
+                        20
+                    ],
+                    [
+                        256,
+                        8,
+                        10
+                    ]
+                ],
+                "hidden_features_list": [
+                    256,
+                    256,
+                    256
+                ],
+                "kernel_size_list": [
+                    3,
+                    3,
+                    3
+                ],
+                "n_layers_list": [
+                    1,
+                    1,
+                    1
+                ],
+                "name": "conv-lstm",
+                "rezero": false
+            }
+        }
+    },
+    "epochs": 200,
+    "model": {
+        "batch_first": false,
+        "clip_wsched": {
+            "name": "constant",
+            "value": 1
+        },
+        "ema_momentum": 0,
+        "evaluator": {
+            "camera": "gen1",
+            "classes": [
+                "car",
+                "pedestrian"
+            ],
+            "downsampling_factor": null,
+            "image_size": [
+                256,
+                320
+            ],
+            "labels_name": "psee_labels",
+            "name": "psee"
+        },
+        "frame_shape": [
+            20,
+            256,
+            320
+        ],
+        "grad_clip": {
+            "value": 5.0
+        },
+        "name": "vcf-detection-evrtdetr",
+        "rtdetr_postproc_kwargs": {
+            "num_classes": 2,
+            "num_top_queries": 300,
+            "remap_mscoco_category": false,
+            "use_focal_loss": true
+        },
+        "use_denoising": true,
+        "video_wsched": {
+            "name": "constant",
+            "value": 0.5
+        }
+    },
+    "losses": {
+        "criterion": {
+            "alpha": 0.75,
+            "eos_coef": 0.0001,
+            "gamma": 2.0,
+            "losses": [
+                "vfl",
+                "boxes"
+            ],
+            "num_classes": 2,
+            "weight_dict": {
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_vfl": 1
+            }
+        },
+        "matcher": {
+            "alpha": 0.25,
+            "gamma": 2.0,
+            "use_focal_loss": true,
+            "weight_dict": {
+                "cost_bbox": 5,
+                "cost_class": 2,
+                "cost_giou": 2
+            }
+        }
+    },
+    "optimizers": {
+        "main": {
+            "lr": 0.0002,
+            "name": "AdamW",
+            "weight_decay": 0
+        }
+    },
+    "schedulers": {
+        "main": {
+            "anneal_strategy": "linear",
+            "div_factor": 20,
+            "final_div_factor": 500.0,
+            "max_lr": 0.0002,
+            "name": "one-cycle",
+            "pct_start": 0.005,
+            "total_steps": 200000
+        }
+    },
+    "seed": 0,
+    "val_interval": 10,
+    "steps_per_train_epoch": 1000,
+    "steps_per_val_epoch": 1000,
+    "transfer": {
+        "base_model": "models/gen1/rtdetr_presnet50",
+        "transfer_map": {
+            "backbone": "ema_backbone",
+            "decoder": "ema_decoder",
+            "encoder": "ema_encoder"
+        },
+        "strict": true,
+        "load_train_state": false,
+        "use_last_checkpoint": false,
+        "fuzzy": null
+    }
+}
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/leanbase/torch/checkpoint.py:66: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  v.load_state_dict(torch.load(load_path, map_location = device))
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:150: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if reference_points.shape[-1] == 2:
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:158: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  elif reference_points.shape[-1] == 4:
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:275: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  config.int8_calibrator = calibrator
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:322: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-10.0, 10.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:319: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-1.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:316: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 2.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:310: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:307: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:313: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-20.0, 20.0)
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/eval/eval.py:34: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  sd = torch.load(ckpt_path, map_location="cpu")
+INFO:evlearn.eval:Detected LRD backbone — enabling LRD in config
+INFO:evlearn.eval:Starting evaluation: 
+INFO:evlearn.eval:{
+    "data": {
+        "train": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 1,
+                    "shuffle_clips": true,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": true,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    "random-flip-horizontal",
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 30,
+                                "expand": false,
+                                "name": "random-rotation"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "translate": [
+                                    0.5,
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "scale": [
+                                    0.5,
+                                    1.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "random-apply",
+                        "p": 0.6,
+                        "transforms": [
+                            {
+                                "degrees": 0,
+                                "name": "random-affine",
+                                "shear": 30
+                            }
+                        ]
+                    },
+                    {
+                        "name": "center-crop",
+                        "size": [
+                            240,
+                            304
+                        ]
+                    },
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": [
+                    {
+                        "name": "random-erasing",
+                        "p": 0.4
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        },
+        "eval": {
+            "clip": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "frame": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "drop_last": false,
+                    "name": "video-element",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": true,
+                    "split_by_video_starts": false
+                },
+                "collate": "default-with-labels",
+                "shapes": [
+                    [
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": null,
+                "transform_frame": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            },
+            "video": {
+                "batch_size": 4,
+                "dataset": {
+                    "bbox_fmt": "xyxy",
+                    "canvas_size": [
+                        240,
+                        304
+                    ],
+                    "data_dtype_list": [
+                        [
+                            "frame",
+                            "float32"
+                        ]
+                    ],
+                    "label_dtype_list": [
+                        [
+                            "boxes",
+                            null
+                        ],
+                        [
+                            "labels",
+                            "int32"
+                        ],
+                        [
+                            "psee_labels",
+                            null
+                        ]
+                    ],
+                    "name": "ebc-video-frame",
+                    "path": "gen1/gen1_preproc_npz",
+                    "return_index": true
+                },
+                "sampler": {
+                    "clip_length": 21,
+                    "drop_last": false,
+                    "name": "video-clip",
+                    "pad_empty": true,
+                    "seed": 0,
+                    "shuffle_clips": false,
+                    "shuffle_frames": false,
+                    "shuffle_videos": false,
+                    "skip_unlabeled": false,
+                    "split_by_video_starts": true
+                },
+                "collate": {
+                    "batch_first": false,
+                    "name": "video"
+                },
+                "shapes": [
+                    [
+                        null,
+                        20,
+                        256,
+                        320
+                    ],
+                    1
+                ],
+                "transform_video": [
+                    {
+                        "name": "pad",
+                        "padding": [
+                            0,
+                            0,
+                            16,
+                            16
+                        ]
+                    }
+                ],
+                "transform_frame": null,
+                "transform_labels": [
+                    "clamp-bboxes",
+                    "sanitize-bboxes"
+                ],
+                "workers": 4
+            }
+        }
+    },
+    "nets": {
+        "backbone": {
+            "model": {
+                "act": "relu",
+                "depth": 50,
+                "freeze_at": -1,
+                "freeze_norm": false,
+                "lrd": {
+                    "enabled": true,
+                    "ratio": 0.9,
+                    "ratio_mode": "rank",
+                    "scheme": 2
+                },
+                "name": "presnet-rtdetr",
+                "num_stages": 4,
+                "pretrained": false,
+                "return_idx": [
+                    1,
+                    2,
+                    3
+                ],
+                "variant": "d"
+            }
+        },
+        "decoder": {
+            "model": {
+                "activation": "relu",
+                "aux_loss": true,
+                "box_noise_scale": 1.0,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "eps": 0.01,
+                "eval_idx": -1,
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "feat_channels": [
+                    256,
+                    256,
+                    256
+                ],
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "label_noise_ratio": 0.5,
+                "learnt_init_query": false,
+                "nhead": 8,
+                "num_classes": 2,
+                "num_decoder_layers": 6,
+                "num_decoder_points": 4,
+                "num_denoising": 100,
+                "num_levels": 3,
+                "num_queries": 300,
+                "position_embed_type": "sine"
+            }
+        },
+        "encoder": {
+            "model": {
+                "act": "silu",
+                "depth_mult": 1,
+                "dim_feedforward": 1024,
+                "dropout": 0.0,
+                "enc_act": "gelu",
+                "eval_spatial_size": [
+                    256,
+                    320
+                ],
+                "expansion": 1.0,
+                "feat_strides": [
+                    8,
+                    16,
+                    32
+                ],
+                "hidden_dim": 256,
+                "in_channels": [
+                    512,
+                    1024,
+                    2048
+                ],
+                "nhead": 8,
+                "num_encoder_layers": 1,
+                "pe_temperature": 10000,
+                "use_encoder_idx": [
+                    2
+                ]
+            }
+        },
+        "temp_enc": {
+            "model": {
+                "fpn_shapes": [
+                    [
+                        256,
+                        32,
+                        40
+                    ],
+                    [
+                        256,
+                        16,
+                        20
+                    ],
+                    [
+                        256,
+                        8,
+                        10
+                    ]
+                ],
+                "hidden_features_list": [
+                    256,
+                    256,
+                    256
+                ],
+                "kernel_size_list": [
+                    3,
+                    3,
+                    3
+                ],
+                "n_layers_list": [
+                    1,
+                    1,
+                    1
+                ],
+                "name": "conv-lstm",
+                "rezero": false
+            }
+        }
+    },
+    "epochs": 200,
+    "model": {
+        "batch_first": false,
+        "clip_wsched": {
+            "name": "constant",
+            "value": 1
+        },
+        "ema_momentum": 0,
+        "evaluator": {
+            "camera": "gen1",
+            "classes": [
+                "car",
+                "pedestrian"
+            ],
+            "downsampling_factor": null,
+            "image_size": [
+                256,
+                320
+            ],
+            "labels_name": "psee_labels",
+            "name": "psee"
+        },
+        "frame_shape": [
+            20,
+            256,
+            320
+        ],
+        "grad_clip": {
+            "value": 5.0
+        },
+        "name": "vcf-detection-evrtdetr",
+        "rtdetr_postproc_kwargs": {
+            "num_classes": 2,
+            "num_top_queries": 300,
+            "remap_mscoco_category": false,
+            "use_focal_loss": true
+        },
+        "use_denoising": true,
+        "video_wsched": {
+            "name": "constant",
+            "value": 0.5
+        }
+    },
+    "losses": {
+        "criterion": {
+            "alpha": 0.75,
+            "eos_coef": 0.0001,
+            "gamma": 2.0,
+            "losses": [
+                "vfl",
+                "boxes"
+            ],
+            "num_classes": 2,
+            "weight_dict": {
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_vfl": 1
+            }
+        },
+        "matcher": {
+            "alpha": 0.25,
+            "gamma": 2.0,
+            "use_focal_loss": true,
+            "weight_dict": {
+                "cost_bbox": 5,
+                "cost_class": 2,
+                "cost_giou": 2
+            }
+        }
+    },
+    "optimizers": {
+        "main": {
+            "lr": 0.0002,
+            "name": "AdamW",
+            "weight_decay": 0
+        }
+    },
+    "schedulers": {
+        "main": {
+            "anneal_strategy": "linear",
+            "div_factor": 20,
+            "final_div_factor": 500.0,
+            "max_lr": 0.0002,
+            "name": "one-cycle",
+            "pct_start": 0.005,
+            "total_steps": 200000
+        }
+    },
+    "seed": 0,
+    "val_interval": 10,
+    "steps_per_train_epoch": 1000,
+    "steps_per_val_epoch": 1000,
+    "transfer": {
+        "base_model": "models/gen1/rtdetr_presnet50",
+        "transfer_map": {
+            "backbone": "ema_backbone",
+            "decoder": "ema_decoder",
+            "encoder": "ema_encoder"
+        },
+        "strict": true,
+        "load_train_state": false,
+        "use_last_checkpoint": false,
+        "fuzzy": null
+    }
+}
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/leanbase/torch/checkpoint.py:66: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  v.load_state_dict(torch.load(load_path, map_location = device))
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:150: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if reference_points.shape[-1] == 2:
+/home/ee2178/scratch/ee2178/evrt_detr/evlearn/bundled/rtdetr_pytorch/zoo/rtdetr/rtdetr_decoder.py:158: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  elif reference_points.shape[-1] == 4:
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:275: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  config.int8_calibrator = calibrator
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:322: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-10.0, 10.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:319: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-1.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:316: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 2.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:310: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:307: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (0.0, 1.0)
+/scratch/ee2178/evrt_detr/scripts/quant_trt/model_quant_test_trtexec.py:313: DeprecationWarning: Use Deprecated in TensorRT 10.1. Superseded by explicit quantization. instead.
+  tensor.dynamic_range = (-20.0, 20.0)

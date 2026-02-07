@@ -82,6 +82,14 @@ def parse_cmdargs():
         type     = int,
     )
 
+    parser.add_argument(
+        '--act_bits',
+        default = None,
+        dest    = 'act_bits',
+        help    = 'number of bits for activation',
+        type    = int
+    )
+
     return parser.parse_args()
 
 def make_eval_directory(model, savedir, mkdir = True):
@@ -144,7 +152,7 @@ def main():
     cmdargs = parse_cmdargs()
 
     args, model = load_model(
-        cmdargs.model, epoch = cmdargs.epoch, device = cmdargs.device
+        cmdargs.model, epoch = cmdargs.epoch, device = cmdargs.device, act_bits = cmdargs.act_bits
     )
     data_config_dict = args.config.data.eval
     assert isinstance(data_config_dict, dict)
