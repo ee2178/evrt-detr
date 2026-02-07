@@ -16,16 +16,19 @@ class PResNetRTDETR(nn.Module):
         freeze_at   = -1,
         freeze_norm = False,
         pretrained  = False,
-    ):
+        lrd = False,
+        act_bits = None
+        ):
         # pylint: disable=too-many-arguments
         super().__init__()
+        self.act_bits = act_bits
 
+        self.lrd_enabled = lrd
         if pretrained or freeze_norm or (freeze_at >= 0):
             LOGGER.warning(
                 'Trying to use either pre-trained or frozen PResNet backbone.'
                 ' This feature works properly only on natural images.'
             )
-
         self._net = PResNet(
             features_input = input_shape[0],
             depth          = depth,
@@ -36,6 +39,8 @@ class PResNetRTDETR(nn.Module):
             freeze_at      = freeze_at,
             freeze_norm    = freeze_norm,
             pretrained     = pretrained,
+            lrd            = lrd,
+            act_bits       = self.act_bits
         )
 
     @property

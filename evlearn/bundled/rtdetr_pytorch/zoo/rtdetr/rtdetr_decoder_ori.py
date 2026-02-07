@@ -10,13 +10,12 @@ import torch
 import torch.nn as nn 
 import torch.nn.functional as F 
 import torch.nn.init as init 
-import torch.cuda.nvtx as nvtx
 
 from .denoising import get_contrastive_denoising_training_group
 from .utils import deformable_attention_core_func, get_activation, inverse_sigmoid
 from .utils import bias_init_with_prob
 
-from .latency_quant_utils import Linear8bit, Quantizer8bit
+
 from ...core import register
 
 
@@ -41,6 +40,9 @@ class MLP(nn.Module):
 
 class MSDeformableAttention(nn.Module):
     def __init__(self, embed_dim=256, num_heads=8, num_levels=4, num_points=4,):
+        """
+        Multi-Scale Deformable Attention Module
+        """
         super(MSDeformableAttention, self).__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
@@ -60,15 +62,6 @@ class MSDeformableAttention(nn.Module):
 
         self._reset_parameters()
 
-        self.quant_forward = False
-
-    def init_quant(self):
-        self.sampling_offsets = Linear8bit.from_float(self.sampling_offsets)
-        self.attention_weights = Linear8bit.from_float(self.attention_weights)
-        self.value_proj = Linear8bit.from_float(self.value_proj)
-        self.output_proj = Linear8bit.from_float(self.output_proj)
-        self.quantizer = Quantizer8bit()
-        self.quant_forward = True
 
     def _reset_parameters(self):
         # sampling_offsets
@@ -99,54 +92,34 @@ class MSDeformableAttention(nn.Module):
                 value_spatial_shapes,
                 value_mask=None):
         """
-        Multi-Scale Deformable Attention forward pass.
-        
-        Key difference from standard attention:
-        - Instead of attending to all positions, it samples a few key points
-        - Sampling locations are learned offsets from reference_points
-        - Works across multiple feature pyramid levels
-        
         Args:
-            query (Tensor): [bs, query_length, C] - decoder queries
-            reference_points (Tensor): [bs, query_length, n_levels, 2], normalized (x,y) centers in [0,1]
-            value (Tensor): [bs, value_length, C] - encoder features (flattened multi-scale)
-            value_spatial_shapes (List): [n_levels, 2], [(H_0, W_0), (H_1, W_1), ...]
-            value_mask (Tensor): [bs, value_length], mask for padding
+            query (Tensor): [bs, query_length, C]
+            reference_points (Tensor): [bs, query_length, n_levels, 2], range in [0, 1], top-left (0,0),
+                bottom-right (1, 1), including padding area
+            value (Tensor): [bs, value_length, C]
+            value_spatial_shapes (List): [n_levels, 2], [(H_0, W_0), (H_1, W_1), ..., (H_{L-1}, W_{L-1})]
+            value_level_start_index (List): [n_levels], [0, H_0*W_0, H_0*W_0+H_1*W_1, ...]
+            value_mask (Tensor): [bs, value_length], True for non-padding elements, False for padding elements
 
         Returns:
-            output (Tensor): [bs, query_length, C] - attended features
+            output (Tensor): [bs, Length_{query}, C]
         """
         bs, Len_q = query.shape[:2]
         Len_v = value.shape[1]
 
-        # Project value features
-        if self.quant_forward:
-            value = self.quantizer(value)
-            query = self.quantizer(query)
         value = self.value_proj(value)
         if value_mask is not None:
             value_mask = value_mask.astype(value.dtype).unsqueeze(-1)
             value *= value_mask
         value = value.reshape(bs, Len_v, self.num_heads, self.head_dim)
 
-        # Predict sampling offsets and attention weights from query
-        # sampling_offsets: [bs, Len_q, num_heads, num_levels, num_points, 2]
-        #   - Learned offsets (dx, dy) from reference_points for each sampling point
-        nvtx.range_push('cross_attn_sample')
-        # torch.cuda.synchronize()
         sampling_offsets = self.sampling_offsets(query).reshape(
             bs, Len_q, self.num_heads, self.num_levels, self.num_points, 2)
-        # torch.cuda.synchronize()
-        nvtx.range_pop()
-        # attention_weights: [bs, Len_q, num_heads, num_levels, num_points]
-        #   - How much to weight each sampling point
         attention_weights = self.attention_weights(query).reshape(
             bs, Len_q, self.num_heads, self.num_levels * self.num_points)
         attention_weights = F.softmax(attention_weights, dim=-1).reshape(
             bs, Len_q, self.num_heads, self.num_levels, self.num_points)
 
-        # Compute actual sampling locations
-        # If reference_points are just centers (2D), normalize offsets by feature size
         if reference_points.shape[-1] == 2:
             offset_normalizer = torch.tensor(value_spatial_shapes)
             offset_normalizer = offset_normalizer.flip([1]).reshape(
@@ -154,7 +127,6 @@ class MSDeformableAttention(nn.Module):
             sampling_locations = reference_points.reshape(
                 bs, Len_q, 1, self.num_levels, 1, 2
             ) + sampling_offsets / offset_normalizer
-        # If reference_points include bbox size (4D), scale offsets by bbox size
         elif reference_points.shape[-1] == 4:
             sampling_locations = (
                 reference_points[:, :, None, :, None, :2] + sampling_offsets /
@@ -164,19 +136,14 @@ class MSDeformableAttention(nn.Module):
                 "Last dim of reference_points must be 2 or 4, but get {} instead.".
                 format(reference_points.shape[-1]))
 
-        # Sample features at computed locations and aggregate with attention weights
         output = self.ms_deformable_attn_core(value, value_spatial_shapes, sampling_locations, attention_weights)
 
-        # Final projection
-        if self.quant_forward:
-            output = self.quantizer(output)
         output = self.output_proj(output)
 
         return output
 
 
 class TransformerDecoderLayer(nn.Module):
-    
     def __init__(self,
                  d_model=256,
                  n_head=8,
@@ -187,22 +154,17 @@ class TransformerDecoderLayer(nn.Module):
                  n_points=4,):
         super(TransformerDecoderLayer, self).__init__()
 
-        # self attention: queries attend to each other
-        # Used for object-to-object interaction (e.g., one box query learns from others)
+        # self attention
         self.self_attn = nn.MultiheadAttention(d_model, n_head, dropout=dropout, batch_first=True)
         self.dropout1 = nn.Dropout(dropout)
         self.norm1 = nn.LayerNorm(d_model)
 
-        # cross attention: queries attend to encoder memory (multi-scale features)
-        # Uses deformable attention which can focus on specific spatial locations
-        # n_levels: number of feature pyramid levels (e.g., P3, P4, P5, P6)
-        # n_points: number of sampling points per attention head per level
+        # cross attention
         self.cross_attn = MSDeformableAttention(d_model, n_head, n_levels, n_points)
         self.dropout2 = nn.Dropout(dropout)
         self.norm2 = nn.LayerNorm(d_model)
 
-        # ffn: feed-forward network for non-linear transformation
-        # Standard MLP: d_model -> dim_feedforward -> d_model
+        # ffn
         self.linear1 = nn.Linear(d_model, dim_feedforward)
         self.activation = getattr(F, activation)
         self.dropout3 = nn.Dropout(dropout)
@@ -210,7 +172,6 @@ class TransformerDecoderLayer(nn.Module):
         self.dropout4 = nn.Dropout(dropout)
         self.norm3 = nn.LayerNorm(d_model)
 
-        self.quant_forward = False
         # self._reset_parameters()
 
     # def _reset_parameters(self):
@@ -218,20 +179,11 @@ class TransformerDecoderLayer(nn.Module):
     #     linear_init_(self.linear2)
     #     xavier_uniform_(self.linear1.weight)
     #     xavier_uniform_(self.linear2.weight)
-    def init_quant(self):
-        self.self_attn.init_quant()
-        self.cross_attn.init_quant()
-        self.linear1 = Linear8bit.from_float(self.linear1)
-        self.linear2 = Linear8bit.from_float(self.linear2)
-        self.quantizer = Quantizer8bit()
-        self.quant_forward = True
 
     def with_pos_embed(self, tensor, pos):
         return tensor if pos is None else tensor + pos
 
     def forward_ffn(self, tgt):
-        if self.quant_forward:
-            return self.linear2(self.quantizer(self.dropout3(self.activation(self.linear1(self.quantizer(tgt))))))
         return self.linear2(self.dropout3(self.activation(self.linear1(tgt))))
 
     def forward(self,
@@ -243,77 +195,44 @@ class TransformerDecoderLayer(nn.Module):
                 attn_mask=None,
                 memory_mask=None,
                 query_pos_embed=None):
-        """
-        Args:
-            tgt: [bs, num_queries, d_model] - decoder queries (object embeddings)
-            reference_points: [bs, num_queries, n_levels, 2] - normalized bbox centers (x, y) in [0,1]
-            memory: [bs, num_pixels, d_model] - encoder output features (flattened multi-scale features)
-            memory_spatial_shapes: List of [H, W] for each feature level
-            memory_level_start_index: List of start indices for each level in flattened memory
-            query_pos_embed: [bs, num_queries, d_model] - positional embeddings for queries
-        """
-        # Step 1: Self-attention
-        # Queries attend to other queries (with positional encoding)
-        # This allows objects to interact and refine their representations
+        # self attention
         q = k = self.with_pos_embed(tgt, query_pos_embed)
 
-        # # if attn_mask is not None:
-        # #     attn_mask = torch.where(
-        # #         attn_mask.to(torch.bool),
-        # #         torch.zeros_like(attn_mask),
-        # #         torch.full_like(attn_mask, float('-inf'), dtype=tgt.dtype))
+        # if attn_mask is not None:
+        #     attn_mask = torch.where(
+        #         attn_mask.to(torch.bool),
+        #         torch.zeros_like(attn_mask),
+        #         torch.full_like(attn_mask, float('-inf'), dtype=tgt.dtype))
 
         tgt2, _ = self.self_attn(q, k, value=tgt, attn_mask=attn_mask)
-        tgt = tgt + self.dropout1(tgt2)  # Residual connection
-        tgt = self.norm1(tgt)  # Layer normalization
+        tgt = tgt + self.dropout1(tgt2)
+        tgt = self.norm1(tgt)
 
-        # Step 2: Cross-attention (Multi-Scale Deformable Attention)
-        # Queries attend to encoder features at reference point locations
-        # reference_points tell the attention where to look in the feature maps
-        # This is the key difference from standard transformers - spatial awareness!
-        # breakpoint()
+        # cross attention
         tgt2 = self.cross_attn(\
-            self.with_pos_embed(tgt, query_pos_embed),  # query with position
-            reference_points,  # where to attend in feature maps
-            memory,  # encoder features to attend to
-            memory_spatial_shapes,  # spatial shapes of each feature level
-            memory_mask)  # mask for padding
-        tgt = tgt + self.dropout2(tgt2)  # Residual connection
-        tgt = self.norm2(tgt)  # Layer normalization
+            self.with_pos_embed(tgt, query_pos_embed), 
+            reference_points, 
+            memory, 
+            memory_spatial_shapes, 
+            memory_mask)
+        tgt = tgt + self.dropout2(tgt2)
+        tgt = self.norm2(tgt)
 
-        # Step 3: Feed-forward network
-        # Non-linear transformation to refine features
-        nvtx.range_push('forward_ffn')
-        # torch.cuda.synchronize()
+        # ffn
         tgt2 = self.forward_ffn(tgt)
-        # torch.cuda.synchronize()
-        nvtx.range_pop()
-        tgt = tgt + self.dropout4(tgt2)  # Residual connection
-        tgt = self.norm3(tgt)  # Layer normalization
+        tgt = tgt + self.dropout4(tgt2)
+        tgt = self.norm3(tgt)
 
         return tgt
 
 
 class TransformerDecoder(nn.Module):
-    """
-    Stack of decoder layers with iterative refinement.
-    
-    Key idea: Each layer refines both:
-    1. Query embeddings (object features)
-    2. Reference points (bbox predictions)
-    
-    The reference points are updated after each layer, creating an iterative
-    refinement process where later layers can attend to better locations.
-    """
     def __init__(self, hidden_dim, decoder_layer, num_layers, eval_idx=-1):
         super(TransformerDecoder, self).__init__()
         self.layers = nn.ModuleList([copy.deepcopy(decoder_layer) for _ in range(num_layers)])
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
         self.eval_idx = eval_idx if eval_idx >= 0 else num_layers + eval_idx
-        self.quant_forward = False
-
-
 
     def forward(self,
                 tgt,
@@ -326,64 +245,34 @@ class TransformerDecoder(nn.Module):
                 query_pos_head,
                 attn_mask=None,
                 memory_mask=None):
-        """
-        Args:
-            tgt: [bs, num_queries, d_model] - initial query embeddings
-            ref_points_unact: [bs, num_queries, 4] - initial bbox predictions (unactivated, in logit space)
-            memory: encoder features
-            bbox_head: ModuleList of bbox prediction heads (one per layer)
-            score_head: ModuleList of classification heads (one per layer)
-            query_pos_head: MLP to generate positional embeddings from bbox centers
-        """
         output = tgt
         dec_out_bboxes = []
         dec_out_logits = []
-        # Convert bbox logits to normalized coordinates [0, 1]
         ref_points_detach = F.sigmoid(ref_points_unact)
 
-        # Iterate through decoder layers
         for i, layer in enumerate(self.layers):
-            # Prepare reference points for cross-attention
-            # Shape: [bs, num_queries, 1, n_levels, 2] - center (x,y) for each level
             ref_points_input = ref_points_detach.unsqueeze(2)
-            
-            # Generate positional embeddings from bbox centers
-            # This makes queries aware of their spatial location
             query_pos_embed = query_pos_head(ref_points_detach)
 
-            # Forward through decoder layer
-            # This refines query embeddings based on:
-            # 1. Self-attention (other queries)
-            # 2. Cross-attention (encoder features at reference points)
-            # 3. FFN (non-linear transformation)
             output = layer(output, ref_points_input, memory,
                            memory_spatial_shapes, memory_level_start_index,
                            attn_mask, memory_mask, query_pos_embed)
 
-            # Predict refined bbox from updated query embeddings
-            # Uses residual connection: new_bbox = sigmoid(bbox_head(output) + inverse_sigmoid(old_bbox))
-            # This allows incremental refinement
             inter_ref_bbox = F.sigmoid(bbox_head[i](output) + inverse_sigmoid(ref_points_detach))
 
-            # Collect outputs for auxiliary losses (training) or final prediction (eval)
             if self.training:
                 dec_out_logits.append(score_head[i](output))
                 if i == 0:
                     dec_out_bboxes.append(inter_ref_bbox)
                 else:
-                    # Use previous layer's ref_points for consistency
                     dec_out_bboxes.append(F.sigmoid(bbox_head[i](output) + inverse_sigmoid(ref_points)))
 
             elif i == self.eval_idx:
-                # During eval, only output from specified layer
                 dec_out_logits.append(score_head[i](output))
                 dec_out_bboxes.append(inter_ref_bbox)
                 break
 
-            # Update reference points for next layer
-            # This is the iterative refinement: each layer uses better bbox predictions
             ref_points = inter_ref_bbox
-            # Detach during training to stabilize gradients
             ref_points_detach = inter_ref_bbox.detach(
             ) if self.training else inter_ref_bbox
 
@@ -425,7 +314,6 @@ class RTDETRTransformer(nn.Module):
             feat_strides.append(feat_strides[-1] * 2)
 
         self.hidden_dim = hidden_dim
-        self.dim_feedforward = dim_feedforward
         self.nhead = nhead
         self.feat_strides = feat_strides
         self.num_levels = num_levels
@@ -480,13 +368,7 @@ class RTDETRTransformer(nn.Module):
             self.anchors, self.valid_mask = self._generate_anchors()
 
         self._reset_parameters()
-        self.quant_forward = False
 
-    def init_quant(self):
-        self.quant_forward = True
-        self.enc_output[0] = Linear8bit.from_float(self.enc_output[0])
-        self.quantizer = Quantizer8bit()
-        
     def _reset_parameters(self):
         bias = bias_init_with_prob(0.01)
 
@@ -604,19 +486,16 @@ class RTDETRTransformer(nn.Module):
         # memory = torch.where(valid_mask, memory, 0)
         memory = valid_mask.to(memory.dtype) * memory  # TODO fix type error for onnx export 
 
-        if self.quant_forward:
-            memory = self.quantizer(memory)
         output_memory = self.enc_output(memory)
 
-        enc_outputs_class = self.enc_score_head(output_memory) # torch.Size([6, 1680, 2])
-        enc_outputs_coord_unact = self.enc_bbox_head(output_memory) + anchors # torch.Size([6, 1680, 4])
+        enc_outputs_class = self.enc_score_head(output_memory)
+        enc_outputs_coord_unact = self.enc_bbox_head(output_memory) + anchors
 
         _, topk_ind = torch.topk(enc_outputs_class.max(-1).values, self.num_queries, dim=1)
         
         reference_points_unact = enc_outputs_coord_unact.gather(dim=1, \
-            index=topk_ind.unsqueeze(-1).repeat(1, 1, enc_outputs_coord_unact.shape[-1])) # torch.Size([6, 300, 4])
+            index=topk_ind.unsqueeze(-1).repeat(1, 1, enc_outputs_coord_unact.shape[-1]))
 
-        # breakpoint()
         enc_topk_bboxes = F.sigmoid(reference_points_unact)
         if denoising_bbox_unact is not None:
             reference_points_unact = torch.concat(

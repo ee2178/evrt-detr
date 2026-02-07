@@ -35,7 +35,7 @@ donwload_url = {
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, ch_in, ch_out, stride, shortcut, act='relu', variant='b'):
+    def __init__(self, ch_in, ch_out, stride, shortcut, act='relu', variant='b', lrd = False):
         super().__init__()
 
         self.shortcut = shortcut
@@ -49,8 +49,8 @@ class BasicBlock(nn.Module):
             else:
                 self.short = ConvNormLayer(ch_in, ch_out, 1, stride)
 
-        self.branch2a = ConvNormLayer(ch_in, ch_out, 3, stride, act=act)
-        self.branch2b = ConvNormLayer(ch_out, ch_out, 3, 1, act=None)
+        self.branch2a = ConvNormLayer(ch_in, ch_out, 3, stride, act=act, lrd = lrd)
+        self.branch2b = ConvNormLayer(ch_out, ch_out, 3, 1, act=None, lrd = lrd)
         self.act = nn.Identity() if act is None else get_activation(act) 
 
 
@@ -71,7 +71,7 @@ class BasicBlock(nn.Module):
 class BottleNeck(nn.Module):
     expansion = 4
 
-    def __init__(self, ch_in, ch_out, stride, shortcut, act='relu', variant='b'):
+    def __init__(self, ch_in, ch_out, stride, shortcut, act='relu', variant='b', lrd = False, act_bits = None):
         super().__init__()
 
         if variant == 'a':
@@ -81,19 +81,19 @@ class BottleNeck(nn.Module):
 
         width = ch_out 
 
-        self.branch2a = ConvNormLayer(ch_in, width, 1, stride1, act=act)
-        self.branch2b = ConvNormLayer(width, width, 3, stride2, act=act)
-        self.branch2c = ConvNormLayer(width, ch_out * self.expansion, 1, 1)
+        self.branch2a = ConvNormLayer(ch_in, width, 1, stride1, act=act, lrd = lrd, act_bits = act_bits)
+        self.branch2b = ConvNormLayer(width, width, 3, stride2, act=act, lrd = lrd, act_bits = act_bits)
+        self.branch2c = ConvNormLayer(width, ch_out * self.expansion, 1, 1, lrd = lrd, act_bits = act_bits)
 
         self.shortcut = shortcut
         if not shortcut:
             if variant == 'd' and stride == 2:
                 self.short = nn.Sequential(OrderedDict([
                     ('pool', nn.AvgPool2d(2, 2, 0, ceil_mode=True)),
-                    ('conv', ConvNormLayer(ch_in, ch_out * self.expansion, 1, 1))
+                    ('conv', ConvNormLayer(ch_in, ch_out * self.expansion, 1, 1, lrd = lrd, act_bits = act_bits))
                 ]))
             else:
-                self.short = ConvNormLayer(ch_in, ch_out * self.expansion, 1, stride)
+                self.short = ConvNormLayer(ch_in, ch_out * self.expansion, 1, stride, lrd = lrd, act_bits = act_bits)
 
         self.act = nn.Identity() if act is None else get_activation(act) 
 
@@ -114,7 +114,7 @@ class BottleNeck(nn.Module):
 
 
 class Blocks(nn.Module):
-    def __init__(self, block, ch_in, ch_out, count, stage_num, act='relu', variant='b'):
+    def __init__(self, block, ch_in, ch_out, count, stage_num, act='relu', variant='b', lrd = False, act_bits = None):
         super().__init__()
 
         self.blocks = nn.ModuleList()
@@ -126,7 +126,9 @@ class Blocks(nn.Module):
                     stride=2 if i == 0 and stage_num != 2 else 1, 
                     shortcut=False if i == 0 else True,
                     variant=variant,
-                    act=act)
+                    act=act,
+                    lrd = lrd,
+                    act_bits = act_bits)
             )
 
             if i == 0:
@@ -151,22 +153,28 @@ class PResNet(nn.Module):
         act='relu',
         freeze_at=-1, 
         freeze_norm=True, 
-        pretrained=False):
+        pretrained=False,
+        lrd=False,
+        act_bits = None):
         super().__init__()
+        
+
+        self.lrd = lrd
+        self.act_bits = act_bits
 
         block_nums = ResNet_cfg[depth]
         ch_in = 64
         if variant in ['c', 'd']:
             conv_def = [
-                [features_input, ch_in // 2, 3, 2, "conv1_1"],
-                [ch_in // 2, ch_in // 2, 3, 1, "conv1_2"],
-                [ch_in // 2, ch_in, 3, 1, "conv1_3"],
+                [features_input, ch_in // 2, 3, 2, "conv1_1", None],
+                [ch_in // 2, ch_in // 2, 3, 1, "conv1_2", act_bits],
+                [ch_in // 2, ch_in, 3, 1, "conv1_3", act_bits],
             ]
         else:
-            conv_def = [[features_input, ch_in, 7, 2, "conv1_1"]]
+            conv_def = [[features_input, ch_in, 7, 2, "conv1_1", None]]
 
         self.conv1 = nn.Sequential(OrderedDict([
-            (_name, ConvNormLayer(c_in, c_out, k, s, act=act)) for c_in, c_out, k, s, _name in conv_def
+            (_name, ConvNormLayer(c_in, c_out, k, s, act=act, lrd = lrd, act_bits = _act_bits)) for c_in, c_out, k, s, _name, _act_bits in conv_def
         ]))
 
         ch_out_list = [64, 128, 256, 512]
@@ -179,7 +187,7 @@ class PResNet(nn.Module):
         for i in range(num_stages):
             stage_num = i + 2
             self.res_layers.append(
-                Blocks(block, ch_in, ch_out_list[i], block_nums[i], stage_num, act=act, variant=variant)
+                Blocks(block, ch_in, ch_out_list[i], block_nums[i], stage_num, act=act, variant=variant, lrd = lrd, act_bits = act_bits)
             )
             ch_in = _out_channels[i]
 
@@ -214,7 +222,45 @@ class PResNet(nn.Module):
                     setattr(m, name, _child)
         return m
 
+    def set_act_bits(self):
+        """
+        Update activation bitwidth for all submodules except the first logical Conv2D
+        inside self.conv1. If low-rank decomposition is enabled, skip both factors.
+        """
+
+        # --- Identify conv1 modules to skip ---
+        skip_modules = set()
+
+        conv1_children = list(self.conv1.children())
+
+        if self.lrd is not None:
+            # First logical conv is decomposed into two factors
+            skip_modules.update(conv1_children[:2])
+        else:
+            # First logical conv is a single Conv2D
+            skip_modules.add(conv1_children[0])
+
+        # Also skip submodules of those layers
+        expanded_skip = set()
+        for m in skip_modules:
+            expanded_skip.update(m.modules())
+        skip_modules = expanded_skip
+
+        # --- Apply act_bits everywhere else ---
+        for m in self.modules():
+            if m in skip_modules:
+                continue
+
+            if hasattr(m, "act_bits"):
+                m.act_bits = self.act_bits
+
+
+
+
     def forward(self, x):
+        # Reapply act_bits
+        self.set_act_bits()
+
         conv1 = self.conv1(x)
         x = F.max_pool2d(conv1, kernel_size=3, stride=2, padding=1)
         outs = []

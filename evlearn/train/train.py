@@ -47,7 +47,7 @@ def train_epoch(dl_train, model, title, steps_per_epoch):
 
     progbar.close()
     return metrics
-
+'''
 def eval_epoch(dl_test, model, title, steps_per_epoch):
     model.eval()
     model.eval_epoch_start()
@@ -71,6 +71,105 @@ def eval_epoch(dl_test, model, title, steps_per_epoch):
     progbar.close()
 
     return metrics
+'''
+
+def eval_epoch(
+    dl_test,
+    model,
+    title,
+    steps_per_epoch,
+    return_times: bool = False,
+    time_set_inputs: bool = False,
+    skip_metrics: bool = False,
+):
+    """
+    Evaluates one epoch, optionally returning per-step timings.
+
+    Timing behavior:
+      - By default times model.eval_step() only.
+      - If time_set_inputs=True, also times model.set_inputs(batch) separately.
+
+    Returns:
+      - metrics (as before)
+      - if return_times=True: (metrics, times_dict)
+        where times_dict contains:
+          - "eval_step_ms": list[float]
+          - optionally "set_inputs_ms": list[float]
+    """
+    model.eval()
+    model.eval_epoch_start()
+
+    steps = infer_steps(dl_test, steps_per_epoch)
+    progbar = tqdm.tqdm(desc=title, total=steps, dynamic_ncols=True)
+
+    metrics = Metrics(prefix="val_") if not skip_metrics else None
+
+    eval_step_ms = []
+    set_inputs_ms = [] if time_set_inputs else None
+
+    # Prefer CUDA event timing when on GPU
+    use_cuda_events = torch.cuda.is_available()
+    start_evt = torch.cuda.Event(enable_timing=True) if use_cuda_events else None
+    end_evt = torch.cuda.Event(enable_timing=True) if use_cuda_events else None
+
+    for batch in islice(dl_test, steps):
+        # --- optional set_inputs timing ---
+        if time_set_inputs:
+            if use_cuda_events:
+                torch.cuda.synchronize()
+                start_evt.record()
+                model.set_inputs(batch)
+                end_evt.record()
+                torch.cuda.synchronize()
+                set_inputs_ms.append(start_evt.elapsed_time(end_evt))
+            else:
+                t0 = time.perf_counter()
+                model.set_inputs(batch)
+                t1 = time.perf_counter()
+                set_inputs_ms.append((t1 - t0) * 1000.0)
+        else:
+            model.set_inputs(batch)
+
+        # --- eval_step timing ---
+        if use_cuda_events:
+            torch.cuda.synchronize()
+            start_evt.record()
+            out = model.eval_step()
+            end_evt.record()
+            torch.cuda.synchronize()
+            eval_step_ms.append(start_evt.elapsed_time(end_evt))
+        else:
+            t0 = time.perf_counter()
+            out = model.eval_step()
+            t1 = time.perf_counter()
+            eval_step_ms.append((t1 - t0) * 1000.0)
+
+        if metrics is not None:
+            metrics.update(out)
+            progbar.set_postfix(metrics.get(), refresh=False)
+        else:
+            # lightweight postfix when skipping metrics
+            progbar.set_postfix({"step_ms": f"{eval_step_ms[-1]:.2f}"}, refresh=False)
+
+        progbar.update()
+
+    end_out = model.eval_epoch_end()
+    if metrics is not None:
+        metrics.update(end_out)
+        progbar.set_postfix(metrics.get(), refresh=True)
+    else:
+        progbar.set_postfix({"mean_ms": f"{sum(eval_step_ms)/len(eval_step_ms):.2f}"}, refresh=True)
+
+    progbar.close()
+
+    if not return_times:
+        return metrics if metrics is not None else None
+
+    times = {"eval_step_ms": eval_step_ms}
+    if time_set_inputs:
+        times["set_inputs_ms"] = set_inputs_ms
+
+    return (metrics if metrics is not None else None), times
 
 def train(
     dl_train, dl_val, model, history_dict, epochs, checkpoint,
