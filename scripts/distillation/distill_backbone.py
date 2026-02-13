@@ -313,9 +313,17 @@ def main():
     student.eval()
     
     # SET TEACHER BACKBONE TO 8 BIT
-    s_backbone._net.act_bits = 8
+    # s_backbone._net.act_bits = 8
 
-    s_backbone.train()  # train only backbone
+    def freeze_bn(m):
+        if isinstance(m, nn.BatchNorm2d):
+            m.eval()
+            for p in m.parameters():
+                p.requires_grad_(False)
+
+    s_backbone.train()
+    # Freeze batch norm layers
+    s_backbone.apply(freeze_bn)
 
     it = iter(dl)
     for step in range(cmd.steps):
@@ -343,8 +351,8 @@ def main():
 
         if len(t_feats) != 3 or len(s_feats) != 3:
             raise RuntimeError(f"Expected 3 backbone outputs, got {len(t_feats)} and {len(s_feats)}")
-
-        loss =sum(channel_energy_kl(t_f, s_f, temp=1.0) for t_f, s_f in zip(t_feats, s_feats))
+        weights = [1.0 0.5 0.25]
+        loss =sum(w*channel_energy_kl(t_f, s_f, temp=2.0) for w, t_f, s_f in zip(weights, t_feats, s_feats))
         loss.backward()
         opt.step()
 

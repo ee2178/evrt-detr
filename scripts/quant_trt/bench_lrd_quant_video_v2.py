@@ -322,7 +322,8 @@ def build_engine_with_trt_python(
         config.set_flag(trt.BuilderFlag.FP16)  # allow fallback
 
         # Dataloader-driven calibrator (multi-input + memory)
-        class EvrtCalibrator(trt.IInt8EntropyCalibrator2):
+        # Since our activations are sparse, use a minmax calibrator
+        class EvrtCalibrator(trt.IInt8MinMaxCalibrator):
             def __init__(self):
                 super().__init__()
                 self.cache_file = calib_cache_path
